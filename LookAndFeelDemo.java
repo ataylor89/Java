@@ -13,6 +13,7 @@ public class LookAndFeelDemo extends JFrame implements ActionListener {
         super("Look and Feel Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 600);
+        setLayout(new FlowLayout(FlowLayout.LEFT));
         panel = new JPanel(); 
         nimbus = new JButton("Nimbus");
         nimbus.addActionListener(this);
