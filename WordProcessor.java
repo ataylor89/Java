@@ -269,6 +269,10 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void runJavaProgram() {
+	String args = JOptionPane.showInputDialog("Java program arguments:", "");
+	if (args != null)
+	    args = args.trim();
+
         String filename = currentFile.getName();
         int lio = filename.lastIndexOf(".");
         if (lio > 0) {
@@ -276,6 +280,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         }
 
         String cmd = "java -cp " + currentFile.getParent() + " " + filename;
+	if (args != null && args.length() > 0)
+	    cmd += " " + args;
 
         ProcessDialog process = new ProcessDialog(this, "Running Java program...", cmd);
         process.start();
