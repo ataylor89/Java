@@ -1,20 +1,23 @@
 import javax.swing.*;
 import javax.swing.plaf.metal.*;
+import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.nio.file.*;
 
-public class WordProcessor extends JFrame implements ActionListener {
+public class WordProcessor extends JFrame implements MenuListener, ActionListener {
 
     private JMenuBar bar;
     private JMenu file;
-    private JMenuItem save, open, fgcolor, bgcolor, exit;
+    private JMenuItem save, saveAs, open, fgcolor, bgcolor, exit;
     private JMenu theme;
     private JMenuItem nimbus, system, metal, ocean;
     private JPanel panel;
+    private JScrollPane scrollPane;
     private JTextArea textArea;    
     private JFileChooser fileChooser;
+    private File currentFile;
 
     public WordProcessor() {
         super("Word Processor");
@@ -25,9 +28,12 @@ public class WordProcessor extends JFrame implements ActionListener {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         bar = new JMenuBar();
         file = new JMenu("File");
-        save = new JMenuItem("Save to file");
+        file.addMenuListener(this);
+        save = new JMenuItem("Save");
         save.addActionListener(this);
-        open = new JMenuItem("Open file");
+        saveAs = new JMenuItem("Save as");
+        saveAs.addActionListener(this);
+        open = new JMenuItem("Open");
         open.addActionListener(this);
         fgcolor = new JMenuItem("Set foreground color");
         fgcolor.addActionListener(this);
@@ -36,6 +42,7 @@ public class WordProcessor extends JFrame implements ActionListener {
         exit = new JMenuItem("Exit");
         exit.addActionListener(this);
         file.add(save);
+        file.add(saveAs);
         file.add(open);
         file.add(fgcolor);
         file.add(bgcolor);
@@ -59,7 +66,8 @@ public class WordProcessor extends JFrame implements ActionListener {
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
         textArea = new JTextArea();
-        panel.add(textArea);
+        scrollPane = new JScrollPane(textArea);
+        panel.add(scrollPane);
         add(panel);
         fileChooser = new JFileChooser();
     }
@@ -91,12 +99,23 @@ public class WordProcessor extends JFrame implements ActionListener {
     }
 
     private void saveToFile() {
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(currentFile));
+            String text = textArea.getText();
+            bufferedWriter.write(text);
+            bufferedWriter.close();
+         } catch (IOException ex) {
+            System.err.println(ex);
+         }
+    }
+
+    private void saveToFileAs() {
         int returnVal = fileChooser.showSaveDialog(this);
         
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
+            currentFile = fileChooser.getSelectedFile();
             try {
-                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(currentFile));
                 String text = textArea.getText();
                 bufferedWriter.write(text);
                 bufferedWriter.close();
@@ -110,9 +129,9 @@ public class WordProcessor extends JFrame implements ActionListener {
         int returnVal = fileChooser.showOpenDialog(this);
         
         if (returnVal == JFileChooser.APPROVE_OPTION) {       
-            File file = fileChooser.getSelectedFile();
+            currentFile = fileChooser.getSelectedFile();
             try {
-                String text = new String(Files.readAllBytes(file.toPath()));
+                String text = new String(Files.readAllBytes(currentFile.toPath()));
                 textArea.setText(text);
             } catch (IOException ex) {
                 System.err.println(ex);
@@ -120,9 +139,22 @@ public class WordProcessor extends JFrame implements ActionListener {
         }
     }
 
+    public void menuSelected(MenuEvent e) {
+        if (e.getSource() == file) {
+            save.setEnabled(currentFile != null);    
+        }
+    }     
+    
+    public void menuDeselected(MenuEvent e) {}
+    
+    public void menuCanceled(MenuEvent e) {}
+    
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == save) {
             saveToFile();
+        }
+        else if (e.getSource() == saveAs) {
+            saveToFileAs();
         }
         else if (e.getSource() == open) {
             openFile();
