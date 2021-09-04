@@ -3,6 +3,7 @@ import javax.swing.plaf.metal.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.datatransfer.*;
 import java.io.*;
 import java.nio.file.*;
 
@@ -14,7 +15,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JMenu theme;
     private JMenuItem nimbus, system, metal, ocean;
     private JMenu tools; 
-    private JMenuItem tabSize, lineCount, characterCount;
+    private JMenuItem tabSize, lineCount, characterCount, copyToClipboard;
     private JPanel panel;
     private JScrollPane scrollPane;
     private JTextArea textArea;    
@@ -69,9 +70,12 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         lineCount.addActionListener(this);
         characterCount = new JMenuItem("Check character count");
         characterCount.addActionListener(this);	
+	copyToClipboard = new JMenuItem("Copy text to clipboard");
+	copyToClipboard.addActionListener(this);
         tools.add(tabSize);
         tools.add(lineCount);
         tools.add(characterCount);
+	tools.add(copyToClipboard);
         bar.add(file);
         bar.add(theme);
         bar.add(tools);       
@@ -206,6 +210,11 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 	}
 	else if (e.getSource() == characterCount) {
 	    JOptionPane.showMessageDialog(this, "There are " + textArea.getText().length() + " characters in the file"); 
+	}
+	else if (e.getSource() == copyToClipboard) {
+	    StringSelection stringSelection = new StringSelection(textArea.getText());
+	    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();	
+            clipboard.setContents(stringSelection, null);
 	}
     }
 
