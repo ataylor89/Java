@@ -1,11 +1,13 @@
 import javax.swing.*;
 import javax.swing.plaf.metal.*;
 import javax.swing.event.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.datatransfer.*;
 import java.io.*;
 import java.nio.file.*;
+import java.util.concurrent.*;
 
 public class WordProcessor extends JFrame implements MenuListener, ActionListener {
 
@@ -15,15 +17,77 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JMenu theme;
     private JMenuItem nimbus, system, metal, ocean;
     private JMenu tools; 
-    private JMenuItem tabSize, lineCount, characterCount, copyToClipboard;
+    private JMenuItem tabSize, lineCount, characterCount, gotoLine, copyToClipboard;
+    private JMenu compile;
+    private JMenuItem compileJavaProgram, compileCProgram, compileCPPProgram, compileNASMProgram;
+    private JMenu run;
+    private JMenuItem runJavaProgram, runPythonProgram, runMachineCodeProgram;	
+    private JTextArea compileTextArea, runTextArea;
     private JPanel panel;
     private JScrollPane scrollPane;
     private JTextArea textArea;    
     private JFileChooser fileChooser;
     private File currentFile;
+    private Color foregroundColor, backgroundColor;
+   
+    private class ProcessDialog extends Thread {
+	private JFrame frame;
+	private String title;
+	private String cmd;
+	private JDialog dialog;
+	private JTextArea display;
+	
+	public ProcessDialog(JFrame frame, String title, String cmd) {
+		this.frame = frame;
+		this.title = title;
+		this.cmd = cmd;
+	}
 
+	private void createAndShowDialog() {
+		dialog = new JDialog(frame, title);
+		dialog.setSize(500, 500);
+		JPanel panel = new JPanel();
+		panel.setLayout(new BorderLayout());
+		display = new JTextArea();
+		JScrollPane scrollPane = new JScrollPane(display);
+		panel.add(scrollPane);
+		dialog.add(panel);
+		dialog.setVisible(true);
+		display.append(cmd + "\n");
+	}
+
+	private void runCommand() {
+		try {
+			Process process = Runtime.getRuntime().exec(cmd);
+			BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String line;
+			while (dialog.isShowing() && process.isAlive() && (line = br.readLine()) != null) {
+				display.append(line);
+				Thread.sleep(1000);
+			}
+			process.destroy();
+		} catch (IOException e) {
+			display.append(e + "\n");
+		} catch (InterruptedException e) {
+			display.append(e + "\n");
+		} 
+	}
+
+	@Override
+	public void run() {
+		createAndShowDialog();
+		runCommand();
+	}
+    }
+	
     public WordProcessor() {
         super("Word Processor");
+    }
+
+    public WordProcessor(String path) {
+	    this();
+        	    System.out.println(path);
+	    currentFile = new File(path);
     }
 
     public void createAndShowGui() {
@@ -70,15 +134,43 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         lineCount.addActionListener(this);
         characterCount = new JMenuItem("Check character count");
         characterCount.addActionListener(this);	
+	gotoLine = new JMenuItem("Goto line number");
+	gotoLine.addActionListener(this);
 	copyToClipboard = new JMenuItem("Copy text to clipboard");
 	copyToClipboard.addActionListener(this);
         tools.add(tabSize);
         tools.add(lineCount);
         tools.add(characterCount);
+	tools.add(gotoLine);
 	tools.add(copyToClipboard);
+        compile = new JMenu("Compile");
+        compileJavaProgram = new JMenuItem("Compile Java program");
+	compileJavaProgram.addActionListener(this);
+	compileCProgram = new JMenuItem("Compile C program");
+	compileCProgram.addActionListener(this);
+	compileCPPProgram = new JMenuItem("Compile C++ program");
+	compileCPPProgram.addActionListener(this);
+	compileNASMProgram = new JMenuItem("Compile NASM program");
+	compileNASMProgram.addActionListener(this);
+	compile.add(compileJavaProgram);
+	compile.add(compileCProgram);
+	compile.add(compileCPPProgram);
+	compile.add(compileNASMProgram);
+	run = new JMenu("Run");
+	runJavaProgram = new JMenuItem("Run Java program");
+	runJavaProgram.addActionListener(this);
+	runPythonProgram = new JMenuItem("Run Python program");
+	runPythonProgram.addActionListener(this);
+	runMachineCodeProgram = new JMenuItem("Run machine code program");
+	runMachineCodeProgram.addActionListener(this);
+	run.add(runJavaProgram);
+	run.add(runPythonProgram);
+	run.add(runMachineCodeProgram);
         bar.add(file);
         bar.add(theme);
         bar.add(tools);       
+	bar.add(compile);
+	bar.add(run);
         setJMenuBar(bar);
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -88,6 +180,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         panel.add(scrollPane);
         add(panel);
         fileChooser = new JFileChooser();
+        if (currentFile != null)
+            openCurrentFile();
     }
 
     public static void setLookAndFeel() {
@@ -143,19 +237,55 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         }
     }
 
+    private void openCurrentFile() {
+	    try {
+	        String text = new String(Files.readAllBytes(currentFile.toPath()));
+	        textArea.setText(text);	
+	    } catch (IOException e) {
+	        System.err.println(e);
+	    }
+    }
+
     private void openFile() {
         int returnVal = fileChooser.showOpenDialog(this);
         
         if (returnVal == JFileChooser.APPROVE_OPTION) {       
             currentFile = fileChooser.getSelectedFile();
-            try {
-                String text = new String(Files.readAllBytes(currentFile.toPath()));
-                textArea.setText(text);
-            } catch (IOException ex) {
-                System.err.println(ex);
-            }
+            openCurrentFile();
         }
     }
+
+    private void compileJavaProgram() {
+	String cmd = "javac " + currentFile.getPath();
+	ProcessDialog process = new ProcessDialog(this, "Compiling Java program...", cmd);
+	process.start();
+    }	
+
+    private void compileCProgram() {}
+	
+    private void compileCPPProgram() {}
+
+    private void compileNASMProgram() {}
+
+    private void runJavaProgram() {
+	String filename = currentFile.getName();
+	int lio = filename.lastIndexOf(".");
+	if (lio > 0)
+		filename = filename.substring(0, lio);
+
+	String cmd = "java -cp " + currentFile.getParent() + " " + filename;
+
+	ProcessDialog process = new ProcessDialog(this, "Running Java program...", cmd);
+	process.start();
+    }
+
+    private void runPythonProgram() {
+	String cmd = "python " + currentFile.getPath();
+	ProcessDialog process = new ProcessDialog(this, "Running Python program...", cmd);
+	process.start();
+    }
+
+    private void runMachineCodeProgram() {} 
 
     public void menuSelected(MenuEvent e) {
         if (e.getSource() == file) {
@@ -178,10 +308,12 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             openFile();
         }
         else if (e.getSource() == fgcolor) {
-            textArea.setForeground(JColorChooser.showDialog(null, "Select a foreground color", null));
+	    foregroundColor = JColorChooser.showDialog(null, "Select a foreground color", null);
+            textArea.setForeground(foregroundColor);
         }
         else if (e.getSource() == bgcolor) {
-            textArea.setBackground(JColorChooser.showDialog(null, "Select a background color", null));
+	    backgroundColor = JColorChooser.showDialog(null, "Select a background color", null);
+            textArea.setBackground(backgroundColor);
         }
         else if (e.getSource() == exit) {
             dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
@@ -211,16 +343,54 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 	else if (e.getSource() == characterCount) {
 	    JOptionPane.showMessageDialog(this, "There are " + textArea.getText().length() + " characters in the file"); 
 	}
+	else if (e.getSource() == gotoLine) {
+	    int maxLineNumber = textArea.getLineCount();
+	    int lineNumber = Integer.parseInt(JOptionPane.showInputDialog("Enter a line number:", "1"));
+	    if (lineNumber >= maxLineNumber)
+		lineNumber = maxLineNumber-1;
+	    if (lineNumber < 0)
+		lineNumber = 0;
+	    try { 
+		textArea.setCaretPosition(textArea.getLineStartOffset(lineNumber));
+	    } catch (BadLocationException le) {
+		System.err.println(le);
+	    }
+	}
 	else if (e.getSource() == copyToClipboard) {
 	    StringSelection stringSelection = new StringSelection(textArea.getText());
 	    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();	
             clipboard.setContents(stringSelection, null);
 	}
+	else if (e.getSource() == compileJavaProgram) {
+		compileJavaProgram();
+	}
+	else if (e.getSource() == compileCProgram) {
+		compileCProgram();
+	}
+	else if (e.getSource() == compileCPPProgram) {
+		compileCPPProgram();
+	}
+	else if (e.getSource() == compileNASMProgram) {
+		compileNASMProgram();
+	}
+	else if (e.getSource() == runJavaProgram) {
+		runJavaProgram();
+	}
+	else if (e.getSource() == runPythonProgram) {
+		runPythonProgram();
+	}	
+	else if (e.getSource() == runMachineCodeProgram) {
+		runMachineCodeProgram();
+	}
     }
 
     public static void main(String[] args) {
-        WordProcessor.setLookAndFeel();
-        WordProcessor wordProcessor = new WordProcessor();
+    	WordProcessor.setLookAndFeel();
+       	WordProcessor wordProcessor;
+	if (args.length == 1) 
+		wordProcessor = new WordProcessor(args[0]);
+	else
+		wordProcessor = new WordProcessor();
         wordProcessor.createAndShowGui();
         wordProcessor.setVisible(true);
     }
