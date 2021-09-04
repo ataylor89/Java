@@ -13,6 +13,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JMenuItem save, saveAs, open, fgcolor, bgcolor, exit;
     private JMenu theme;
     private JMenuItem nimbus, system, metal, ocean;
+    private JMenu tools; 
+    private JMenuItem tabSize, lineCount, characterCount;
     private JPanel panel;
     private JScrollPane scrollPane;
     private JTextArea textArea;    
@@ -60,12 +62,24 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         theme.add(system);
         theme.add(metal);
         theme.add(ocean);
+        tools = new JMenu("Tools");
+        tabSize = new JMenuItem("Set tab size");
+        tabSize.addActionListener(this);
+        lineCount = new JMenuItem("Check line count");
+        lineCount.addActionListener(this);
+        characterCount = new JMenuItem("Check character count");
+        characterCount.addActionListener(this);	
+        tools.add(tabSize);
+        tools.add(lineCount);
+        tools.add(characterCount);
         bar.add(file);
         bar.add(theme);
+        bar.add(tools);       
         setJMenuBar(bar);
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
         textArea = new JTextArea();
+        textArea.setTabSize(3);
         scrollPane = new JScrollPane(textArea);
         panel.add(scrollPane);
         add(panel);
@@ -183,6 +197,16 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             MetalLookAndFeel.setCurrentTheme(new OceanTheme());
             setLookAndFeel(new MetalLookAndFeel());
         }
+        else if (e.getSource() == tabSize) {
+            Integer size = (Integer) JOptionPane.showInputDialog(this, "Select tab size", "Tab size", JOptionPane.PLAIN_MESSAGE, null, new Integer[] {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}, 3);
+            textArea.setTabSize(size);
+        }
+	else if (e.getSource() == lineCount) {
+	    JOptionPane.showMessageDialog(this, "There are " + textArea.getLineCount() + " lines in the file"); 				
+	}
+	else if (e.getSource() == characterCount) {
+	    JOptionPane.showMessageDialog(this, "There are " + textArea.getText().length() + " characters in the file"); 
+	}
     }
 
     public static void main(String[] args) {
