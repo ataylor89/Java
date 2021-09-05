@@ -8,12 +8,14 @@ import java.awt.event.*;
 import java.awt.datatransfer.*;
 import java.io.*;
 import java.nio.file.*;
+import java.net.*;
+import java.util.stream.*;
 
 public class WordProcessor extends JFrame implements MenuListener, ActionListener {
 
     private JMenuBar bar;
     private JMenu file;
-    private JMenuItem newFile, save, saveAs, open, exit;
+    private JMenuItem newFile, save, saveAs, open, downloadWebPage, exit;
     private JMenu colors;
     private JMenuItem fgcolor, bgcolor, whiteblack, whitegray, tealwhite, purplewhite;
     private JMenu theme;
@@ -107,12 +109,15 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         saveAs.addActionListener(this);
         open = new JMenuItem("Open");
         open.addActionListener(this);
+	downloadWebPage = new JMenuItem("Download web page");
+	downloadWebPage.addActionListener(this);
         exit = new JMenuItem("Exit");
         exit.addActionListener(this);
         file.add(newFile);
         file.add(save);
         file.add(saveAs);
         file.add(open);
+	file.add(downloadWebPage);
         file.add(exit);
         colors = new JMenu("Colors");
         fgcolor = new JMenuItem("Set foreground color");
@@ -236,20 +241,23 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         SwingUtilities.updateComponentTreeUI(this);
     }
 
-    private void newFile() {
+    private void promptForSave() {
         if (currentFile != null) {
             int option = JOptionPane.showConfirmDialog(this, "Would you like to save the current file?");
             if (option == JOptionPane.YES_OPTION) {
-                saveToFile();
+                saveToFile(currentFile);
             }
         }
+    }
+
+    private void newFile() {
         currentFile = null;
         textArea.setText("");
     }
 
-    private void saveToFile() {
+    private void saveToFile(File file) {
         try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(currentFile));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
             String text = textArea.getText();
             bufferedWriter.write(text);
             bufferedWriter.close();
@@ -263,14 +271,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             currentFile = fileChooser.getSelectedFile();
-            try {
-                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(currentFile));
-                String text = textArea.getText();
-                bufferedWriter.write(text);
-                bufferedWriter.close();
-            } catch (IOException ex) {
-                System.err.println(ex);
-            }
+            saveToFile(currentFile);
         }
     }
 
@@ -343,17 +344,36 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == newFile) {
+            promptForSave();
             newFile();
             enableDisableMenuItems();
         } else if (e.getSource() == save) {
-            saveToFile();
+            saveToFile(currentFile);
         } else if (e.getSource() == saveAs) {
             saveToFileAs();
             enableDisableMenuItems();
         } else if (e.getSource() == open) {
+            promptForSave();
             openFile();
             enableDisableMenuItems();
-        } else if (e.getSource() == exit) {
+        } else if (e.getSource() == downloadWebPage) {
+            promptForSave();
+	    newFile();
+	    String address = JOptionPane.showInputDialog(this, "URL:", "Download web page", JOptionPane.QUESTION_MESSAGE);
+	    try {
+		URL url = new URL(address);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+	   	connection.connect();
+		BufferedReader br = new BufferedReader(new InputStreamReader((InputStream) connection.getContent()));
+		String text = br.lines().collect(Collectors.joining("\n"));
+		textArea.setText(text);
+	    } catch (MalformedURLException ex) {
+		System.err.println(ex);
+	    } catch (IOException ex) {
+		System.err.println(ex);
+	    }
+	    enableDisableMenuItems();
+	} else if (e.getSource() == exit) {
             dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
             System.exit(0);
         } else if (e.getSource() == fgcolor) {
@@ -389,7 +409,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             MetalLookAndFeel.setCurrentTheme(new OceanTheme());
             setLookAndFeel(new MetalLookAndFeel());
         } else if (e.getSource() == tabSize) {
-            Integer size = (Integer) JOptionPane.showInputDialog(this, "Select tab size", "Tab size", JOptionPane.PLAIN_MESSAGE, null, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, tabSize);
+            Integer size = (Integer) JOptionPane.showInputDialog(this, "Select tab size", "Tab size", JOptionPane.QUESTION_MESSAGE, null, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, tabSize);
             tabWidth = size.intValue();
             textArea.setTabSize(tabWidth);
         } else if (e.getSource() == lineCount) {
@@ -398,7 +418,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             JOptionPane.showMessageDialog(this, "There are " + textArea.getText().length() + " characters in the file");
         } else if (e.getSource() == gotoLine) {
             int maxLineNumber = textArea.getLineCount();
-            int lineNumber = Integer.parseInt(JOptionPane.showInputDialog("Enter a line number:", "1"));
+            int lineNumber = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter a line number:", "Goto line", JOptionPane.QUESTION_MESSAGE));
             if (lineNumber >= maxLineNumber) {
                 lineNumber = maxLineNumber - 1;
             }
