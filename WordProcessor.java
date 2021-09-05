@@ -22,6 +22,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JMenuItem tabSize, lineCount, characterCount, gotoLine, copyToClipboard;
     private JMenu compile;
     private JMenuItem compileJavaProgram, compileCProgram, compileCPPProgram, compileNASMProgram;
+    private JMenu link;
+    private JMenuItem linkObjectCode;
     private JMenu run;
     private JMenuItem runJavaProgram, runPythonProgram, runMachineCodeProgram;
     private JPanel panel;
@@ -173,6 +175,10 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         compile.add(compileCProgram);
         compile.add(compileCPPProgram);
         compile.add(compileNASMProgram);
+        link = new JMenu("Link");
+        linkObjectCode = new JMenuItem("Link object code"); 
+        linkObjectCode.addActionListener(this);
+        link.add(linkObjectCode);
         run = new JMenu("Run");
         runJavaProgram = new JMenuItem("Run Java program");
         runJavaProgram.addActionListener(this);
@@ -188,6 +194,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         bar.add(theme);
         bar.add(tools);
         bar.add(compile);
+        bar.add(link);
         bar.add(run);
         setJMenuBar(bar);
         panel = new JPanel();
@@ -311,6 +318,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         compileNASMProgram.setEnabled(currentFile != null);
         runJavaProgram.setEnabled(currentFile != null);
         runPythonProgram.setEnabled(currentFile != null);
+        linkObjectCode.setEnabled(currentFile != null);
         runMachineCodeProgram.setEnabled(currentFile != null);
     }
 
@@ -422,9 +430,17 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             String cmd = "nasm -fmacho64 " + currentFile.getPath();
 	    ProcessController process = new ProcessController(this, "Compiling NASM program...", cmd);
 	    process.start();
+        } else if (e.getSource() == linkObjectCode) {
+            String sharedLibraries = JOptionPane.showInputDialog(this, "Shared libraries:", "Shared libraries", JOptionPane.QUESTION_MESSAGE);
+            String cmd = "ld -macosx_version_min 10.7 ";
+            if (sharedLibraries != null && sharedLibraries.length() > 0)
+                 cmd += sharedLibraries + " ";
+            cmd += getPathWithoutExtension() + ".o -o " + getPathWithoutExtension();
+            ProcessController process = new ProcessController(this, "Linking object code with ld...", cmd);
+            process.start();
         } else if (e.getSource() == runJavaProgram) {
             String classname = getFilenameWithoutExtension();
-	    String args = JOptionPane.showInputDialog("Java program arguments:", "");
+	    String args = JOptionPane.showInputDialog(this, "Java runtime arguments:", "Java runtime arguments", JOptionPane.QUESTION_MESSAGE);
 	    String cmd = "java -cp " + currentFile.getParent() + " " + classname;
 	    if (args != null & args.length() > 0)
 		cmd += " " + args;
@@ -435,7 +451,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             ProcessController process = new ProcessController(this, "Running Python program...", cmd);
 	    process.start();
         } else if (e.getSource() == runMachineCodeProgram) {
-            String cmd = currentFile.getPath();
+            String cmd = getPathWithoutExtension();
 	    ProcessController process = new ProcessController(this, "Running machine code program...", cmd);
             process.start();
         }
