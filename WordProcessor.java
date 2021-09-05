@@ -1,4 +1,3 @@
-
 import javax.swing.*;
 import javax.swing.plaf.metal.*;
 import javax.swing.event.*;
@@ -36,15 +35,19 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
         private JFrame frame;
         private String title;
-        private String cmd;
+        private String[] cmds;
         private JDialog dialog;
         private JTextArea display;
 
-        public ProcessDialog(JFrame frame, String title, String cmd) {
+        public ProcessDialog(JFrame frame, String title, String[] cmds) {
             this.frame = frame;
             this.title = title;
-            this.cmd = cmd;
+            this.cmds = cmds;
         }
+
+	public ProcessDialog(JFrame frame, String title, String cmd) {
+		this(frame, title, new String[] {cmd});
+	}
 
         private void createAndShowDialog() {
             dialog = new JDialog(frame, title);
@@ -56,27 +59,29 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             panel.add(scrollPane);
             dialog.add(panel);
             dialog.setVisible(true);
-            display.append(cmd + "\n");
         }
 
-        private void runCommand() {
+        private void runCommand(String cmd) {
             try {
-                Process process = Runtime.getRuntime().exec(cmd);
-                BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                while (dialog.isShowing() && process.isAlive()) {
-		    br.lines().forEach(line -> display.append(line + "\n"));
-		    Thread.sleep(100);
-                }
-                process.destroy();
-            } catch (IOException | InterruptedException e) {
-                display.append(e + "\n");
+	       	display.append(cmd + "\n");
+                	Process process = Runtime.getRuntime().exec(cmd);
+                	BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		BufferedReader bre = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		int value;
+                	while (dialog.isShowing() && process.isAlive() && (value = br.read()) != -1) {
+		    	display.append(Character.toString((char) value));
+                	} 
+                	process.destroy();
+            } catch (IOException e) {
+                	display.append(e + "\n");
             }
         }
 
         @Override
         public void run() {
             createAndShowDialog();
-            runCommand();
+	    for (String cmd : cmds)
+            	runCommand(cmd);
         }
     }
 
@@ -293,6 +298,15 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         return filename;
     }
 
+    private String getPathWithoutExtension() {
+        String path = currentFile.getPath();
+	int lio = path.lastIndexOf(".");
+        if (lio > 0) {
+             path = path.substring(0, lio);
+        }
+        return path;
+    }
+
     private void compileJavaProgram() {
         String cmd = "javac " + currentFile.getPath();
         ProcessDialog process = new ProcessDialog(this, "Compiling Java program...", cmd);
@@ -306,6 +320,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void compileNASMProgram() {
+	String[] cmds = { "nasm -fmacho64 " + currentFile.getPath(), "ld -macosx_version_min 10.7 -lSystem " + getPathWithoutExtension() + ".o -o " + getFilenameWithoutExtension()};
+	ProcessDialog process = new ProcessDialog(this, "Compiling and linking NASM program...", cmds);
+	process.start();
     }
 
     private void runJavaProgram() {
@@ -332,6 +349,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void runMachineCodeProgram() {
+	String cmd = getPathWithoutExtension();
+	ProcessDialog process = new ProcessDialog(this, "Running machine code program...", cmd);
+	process.start();
     }
  
     private void enableDisableMenuItems() {
