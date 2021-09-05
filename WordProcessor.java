@@ -411,9 +411,13 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 	    ProcessController process = new ProcessController(this, "Compiling Java program...", cmd);
              process.start();
         } else if (e.getSource() == compileCProgram) {
-            
+            String cmd = "gcc -c " + currentFile.getPath() + " -o " + getPathWithoutExtension() + ".o";
+	    ProcessController process = new ProcessController(this, "Compiling C program with gcc...", cmd);
+	    process.start();
         } else if (e.getSource() == compileCPPProgram) {
-            
+            String cmd = "g++ -c " + currentFile.getPath() + " -o " + getPathWithoutExtension() + ".o";
+	    ProcessController process = new ProcessController(this, "Compiling C++ program with g++", cmd);
+            process.start();
         } else if (e.getSource() == compileNASMProgram) {
             String cmd = "nasm -fmacho64 " + currentFile.getPath();
 	    ProcessController process = new ProcessController(this, "Compiling NASM program...", cmd);
