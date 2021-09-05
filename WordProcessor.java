@@ -1,3 +1,4 @@
+
 import javax.swing.*;
 import javax.swing.plaf.metal.*;
 import javax.swing.event.*;
@@ -45,9 +46,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             this.cmds = cmds;
         }
 
-	public ProcessDialog(JFrame frame, String title, String cmd) {
-		this(frame, title, new String[] {cmd});
-	}
+        public ProcessDialog(JFrame frame, String title, String cmd) {
+            this(frame, title, new String[]{cmd});
+        }
 
         private void createAndShowDialog() {
             dialog = new JDialog(frame, title);
@@ -63,25 +64,26 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
         private void runCommand(String cmd) {
             try {
-	       	display.append(cmd + "\n");
-                	Process process = Runtime.getRuntime().exec(cmd);
-                	BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		BufferedReader bre = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-		int value;
-                	while (dialog.isShowing() && process.isAlive() && (value = br.read()) != -1) {
-		    	display.append(Character.toString((char) value));
-                	} 
-                	process.destroy();
+                display.append(cmd + "\n");
+                Process process = Runtime.getRuntime().exec(cmd);
+                BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader bre = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                int value;
+                while (dialog.isShowing() && process.isAlive() && (value = br.read()) != -1) {
+                    display.append(Character.toString((char) value));
+                }
+                process.destroy();
             } catch (IOException e) {
-                	display.append(e + "\n");
+                display.append(e + "\n");
             }
         }
 
         @Override
         public void run() {
             createAndShowDialog();
-	    for (String cmd : cmds)
-            	runCommand(cmd);
+            for (String cmd : cmds) {
+                runCommand(cmd);
+            }
         }
     }
 
@@ -235,13 +237,14 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void newFile() {
-	if (currentFile != null) {
-		int option = JOptionPane.showConfirmDialog(this, "Would you like to save the current file?");
-		if (option == JOptionPane.YES_OPTION)
-			saveToFile();
-	}
-	currentFile = null;
-	textArea.setText("");
+        if (currentFile != null) {
+            int option = JOptionPane.showConfirmDialog(this, "Would you like to save the current file?");
+            if (option == JOptionPane.YES_OPTION) {
+                saveToFile();
+            }
+        }
+        currentFile = null;
+        textArea.setText("");
     }
 
     private void saveToFile() {
@@ -300,9 +303,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     private String getPathWithoutExtension() {
         String path = currentFile.getPath();
-	int lio = path.lastIndexOf(".");
+        int lio = path.lastIndexOf(".");
         if (lio > 0) {
-             path = path.substring(0, lio);
+            path = path.substring(0, lio);
         }
         return path;
     }
@@ -320,9 +323,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void compileNASMProgram() {
-	String[] cmds = { "nasm -fmacho64 " + currentFile.getPath(), "ld -macosx_version_min 10.7 -lSystem " + getPathWithoutExtension() + ".o -o " + getFilenameWithoutExtension()};
-	ProcessDialog process = new ProcessDialog(this, "Compiling and linking NASM program...", cmds);
-	process.start();
+        String[] cmds = {"nasm -fmacho64 " + currentFile.getPath(), "ld -macosx_version_min 10.7 -lSystem " + getPathWithoutExtension() + ".o -o " + getFilenameWithoutExtension()};
+        ProcessDialog process = new ProcessDialog(this, "Compiling and linking NASM program...", cmds);
+        process.start();
     }
 
     private void runJavaProgram() {
@@ -349,20 +352,20 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void runMachineCodeProgram() {
-	String cmd = getPathWithoutExtension();
-	ProcessDialog process = new ProcessDialog(this, "Running machine code program...", cmd);
-	process.start();
+        String cmd = getPathWithoutExtension();
+        ProcessDialog process = new ProcessDialog(this, "Running machine code program...", cmd);
+        process.start();
     }
- 
+
     private void enableDisableMenuItems() {
-	save.setEnabled(currentFile != null);
-	compileJavaProgram.setEnabled(currentFile != null);
-	compileCProgram.setEnabled(currentFile != null);
-	compileCPPProgram.setEnabled(currentFile != null);
-	compileNASMProgram.setEnabled(currentFile != null);
-	runJavaProgram.setEnabled(currentFile != null);
-	runPythonProgram.setEnabled(currentFile != null);
-	runMachineCodeProgram.setEnabled(currentFile != null);
+        save.setEnabled(currentFile != null);
+        compileJavaProgram.setEnabled(currentFile != null);
+        compileCProgram.setEnabled(currentFile != null);
+        compileCPPProgram.setEnabled(currentFile != null);
+        compileNASMProgram.setEnabled(currentFile != null);
+        runJavaProgram.setEnabled(currentFile != null);
+        runPythonProgram.setEnabled(currentFile != null);
+        runMachineCodeProgram.setEnabled(currentFile != null);
     }
 
     @Override
@@ -386,9 +389,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == newFile) {
-	    newFile();
-	    enableDisableMenuItems();
-	} else if (e.getSource() == save) {
+            newFile();
+            enableDisableMenuItems();
+        } else if (e.getSource() == save) {
             saveToFile();
         } else if (e.getSource() == saveAs) {
             saveToFileAs();
