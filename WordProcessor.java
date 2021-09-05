@@ -1,3 +1,4 @@
+
 import javax.swing.*;
 import javax.swing.plaf.metal.*;
 import javax.swing.event.*;
@@ -12,7 +13,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     private JMenuBar bar;
     private JMenu file;
-    private JMenuItem save, saveAs, open, fgcolor, bgcolor, exit;
+    private JMenuItem newFile, save, saveAs, open, exit;
+    private JMenu colors;
+    private JMenuItem fgcolor, bgcolor, whiteblack, whitegray, tealwhite, purplewhite;
     private JMenu theme;
     private JMenuItem nimbus, system, metal, ocean;
     private JMenu tools;
@@ -60,10 +63,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             try {
                 Process process = Runtime.getRuntime().exec(cmd);
                 BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                while (dialog.isShowing() && process.isAlive() && (line = br.readLine()) != null) {
-                    display.append(line);
-                    Thread.sleep(1000);
+                while (dialog.isShowing() && process.isAlive()) {
+		    br.lines().forEach(line -> display.append(line + "\n"));
+		    Thread.sleep(100);
                 }
                 process.destroy();
             } catch (IOException | InterruptedException e) {
@@ -95,24 +97,40 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         bar = new JMenuBar();
         file = new JMenu("File");
         file.addMenuListener(this);
+        newFile = new JMenuItem("New");
+        newFile.addActionListener(this);
         save = new JMenuItem("Save");
         save.addActionListener(this);
         saveAs = new JMenuItem("Save as");
         saveAs.addActionListener(this);
         open = new JMenuItem("Open");
         open.addActionListener(this);
+        exit = new JMenuItem("Exit");
+        exit.addActionListener(this);
+        file.add(newFile);
+        file.add(save);
+        file.add(saveAs);
+        file.add(open);
+        file.add(exit);
+        colors = new JMenu("Colors");
         fgcolor = new JMenuItem("Set foreground color");
         fgcolor.addActionListener(this);
         bgcolor = new JMenuItem("Set background color");
         bgcolor.addActionListener(this);
-        exit = new JMenuItem("Exit");
-        exit.addActionListener(this);
-        file.add(save);
-        file.add(saveAs);
-        file.add(open);
-        file.add(fgcolor);
-        file.add(bgcolor);
-        file.add(exit);
+        whiteblack = new JMenuItem("White black");
+        whiteblack.addActionListener(this);
+        whitegray = new JMenuItem("White gray");
+        whitegray.addActionListener(this);
+        tealwhite = new JMenuItem("Teal white");
+        tealwhite.addActionListener(this);
+        purplewhite = new JMenuItem("Purple white");
+        purplewhite.addActionListener(this);
+        colors.add(fgcolor);
+        colors.add(bgcolor);
+        colors.add(whiteblack);
+        colors.add(whitegray);
+        colors.add(tealwhite);
+        colors.add(purplewhite);
         theme = new JMenu("Theme");
         nimbus = new JMenuItem("Nimbus theme");
         nimbus.addActionListener(this);
@@ -166,6 +184,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         run.add(runPythonProgram);
         run.add(runMachineCodeProgram);
         bar.add(file);
+        bar.add(colors);
         bar.add(theme);
         bar.add(tools);
         bar.add(compile);
@@ -208,6 +227,16 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             System.err.println(e);
         }
         SwingUtilities.updateComponentTreeUI(this);
+    }
+
+    private void newFile() {
+	if (currentFile != null) {
+		int option = JOptionPane.showConfirmDialog(this, "Would you like to save the current file?");
+		if (option == JOptionPane.YES_OPTION)
+			saveToFile();
+	}
+	currentFile = null;
+	textArea.setText("");
     }
 
     private void saveToFile() {
@@ -304,12 +333,21 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     private void runMachineCodeProgram() {
     }
+ 
+    private void enableDisableMenuItems() {
+	save.setEnabled(currentFile != null);
+	compileJavaProgram.setEnabled(currentFile != null);
+	compileCProgram.setEnabled(currentFile != null);
+	compileCPPProgram.setEnabled(currentFile != null);
+	compileNASMProgram.setEnabled(currentFile != null);
+	runJavaProgram.setEnabled(currentFile != null);
+	runPythonProgram.setEnabled(currentFile != null);
+	runMachineCodeProgram.setEnabled(currentFile != null);
+    }
 
     @Override
     public void menuSelected(MenuEvent e) {
-        if (e.getSource() == file) {
-            save.setEnabled(currentFile != null);
-        }
+        enableDisableMenuItems();
     }
 
     @Override
@@ -320,23 +358,49 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     public void menuCanceled(MenuEvent e) {
     }
 
+    private void refreshColors() {
+        textArea.setForeground(foregroundColor);
+        textArea.setBackground(backgroundColor);
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == save) {
+        if (e.getSource() == newFile) {
+	    newFile();
+	    enableDisableMenuItems();
+	} else if (e.getSource() == save) {
             saveToFile();
         } else if (e.getSource() == saveAs) {
             saveToFileAs();
+            enableDisableMenuItems();
         } else if (e.getSource() == open) {
             openFile();
+            enableDisableMenuItems();
+        } else if (e.getSource() == exit) {
+            dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+            System.exit(0);
         } else if (e.getSource() == fgcolor) {
             foregroundColor = JColorChooser.showDialog(null, "Select a foreground color", null);
             textArea.setForeground(foregroundColor);
         } else if (e.getSource() == bgcolor) {
             backgroundColor = JColorChooser.showDialog(null, "Select a background color", null);
             textArea.setBackground(backgroundColor);
-        } else if (e.getSource() == exit) {
-            dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
-            System.exit(0);
+        } else if (e.getSource() == whiteblack) {
+            foregroundColor = Color.BLACK;
+            backgroundColor = Color.WHITE;
+            refreshColors();
+        } else if (e.getSource() == whitegray) {
+            foregroundColor = Color.LIGHT_GRAY;
+            backgroundColor = Color.WHITE;
+            refreshColors();
+        } else if (e.getSource() == tealwhite) {
+            foregroundColor = Color.WHITE;
+            backgroundColor = new Color(0, 153, 153, 255);
+            refreshColors();
+        } else if (e.getSource() == purplewhite) {
+            foregroundColor = Color.WHITE;
+            backgroundColor = new Color(153, 0, 153, 255);
+            refreshColors();
         } else if (e.getSource() == nimbus) {
             setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } else if (e.getSource() == system) {
