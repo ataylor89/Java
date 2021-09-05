@@ -87,9 +87,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         tabWidth = 1;
     }
 
-    public WordProcessor(String path) {
-        this();
-        System.out.println(path);
+    public void setFilePath(String path) {
         currentFile = new File(path);
     }
 
@@ -441,12 +439,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     public static void main(String[] args) {
         WordProcessor.setLookAndFeel();
-        WordProcessor wordProcessor;
-        if (args.length == 1) {
-            wordProcessor = new WordProcessor(args[0]);
-        } else {
-            wordProcessor = new WordProcessor();
-        }
+        WordProcessor wordProcessor = new WordProcessor();
+	if (args != null && args.length > 0)
+        	    wordProcessor.setFilePath(args[0]);
         wordProcessor.createAndShowGui();
         wordProcessor.setVisible(true);
     }
