@@ -32,22 +32,18 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private Color foregroundColor, backgroundColor;
     private int tabWidth;
 
-    private class ProcessDialog extends Thread {
+    private class ProcessController extends Thread {
 
         private JFrame frame;
         private String title;
-        private String[] cmds;
+        private String cmd;
         private JDialog dialog;
         private JTextArea display;
 
-        public ProcessDialog(JFrame frame, String title, String[] cmds) {
+        public ProcessController(JFrame frame, String title, String cmd) {
             this.frame = frame;
-            this.title = title;
-            this.cmds = cmds;
-        }
-
-        public ProcessDialog(JFrame frame, String title, String cmd) {
-            this(frame, title, new String[]{cmd});
+	    this.title = title;
+            this.cmd = cmd;
         }
 
         private void createAndShowDialog() {
@@ -62,15 +58,16 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             dialog.setVisible(true);
         }
 
-        private void runCommand(String cmd) {
+        private void runCommand() {
             try {
                 display.append(cmd + "\n");
                 Process process = Runtime.getRuntime().exec(cmd);
                 BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 BufferedReader bre = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                 int value;
-                while (dialog.isShowing() && process.isAlive() && (value = br.read()) != -1) {
-                    display.append(Character.toString((char) value));
+                while (dialog.isShowing() && process.isAlive()) {
+		    br.lines().forEach(line -> display.append(line + "\n"));
+                    bre.lines().forEach(line -> display.append("Error: " + line + "\n"));
                 }
                 process.destroy();
             } catch (IOException e) {
@@ -81,9 +78,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         @Override
         public void run() {
             createAndShowDialog();
-            for (String cmd : cmds) {
-                runCommand(cmd);
-            }
+            runCommand();
         }
     }
 
@@ -206,7 +201,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         add(panel);
         fileChooser = new JFileChooser();
         if (currentFile != null) {
-            openCurrentFile();
+            openFile(currentFile);
         }
     }
 
@@ -274,9 +269,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         }
     }
 
-    private void openCurrentFile() {
+    private void openFile(File file) {
         try {
-            String text = new String(Files.readAllBytes(currentFile.toPath()));
+            String text = new String(Files.readAllBytes(file.toPath()));
             textArea.setText(text);
         } catch (IOException e) {
             System.err.println(e);
@@ -288,7 +283,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             currentFile = fileChooser.getSelectedFile();
-            openCurrentFile();
+            openFile(currentFile);
         }
     }
 
@@ -308,53 +303,6 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             path = path.substring(0, lio);
         }
         return path;
-    }
-
-    private void compileJavaProgram() {
-        String cmd = "javac " + currentFile.getPath();
-        ProcessDialog process = new ProcessDialog(this, "Compiling Java program...", cmd);
-        process.start();
-    }
-
-    private void compileCProgram() {
-    }
-
-    private void compileCPPProgram() {
-    }
-
-    private void compileNASMProgram() {
-        String[] cmds = {"nasm -fmacho64 " + currentFile.getPath(), "ld -macosx_version_min 10.7 -lSystem " + getPathWithoutExtension() + ".o -o " + getFilenameWithoutExtension()};
-        ProcessDialog process = new ProcessDialog(this, "Compiling and linking NASM program...", cmds);
-        process.start();
-    }
-
-    private void runJavaProgram() {
-        String classname = getFilenameWithoutExtension();
-
-        String args = JOptionPane.showInputDialog("Java program arguments:", "");
-        if (args != null) {
-            args = args.trim();
-        }
-
-        String cmd = "java -cp " + currentFile.getParent() + " " + classname;
-        if (args != null && args.length() > 0) {
-            cmd += " " + args;
-        }
-
-        ProcessDialog process = new ProcessDialog(this, "Running Java program...", cmd);
-        process.start();
-    }
-
-    private void runPythonProgram() {
-        String cmd = "python " + currentFile.getPath();
-        ProcessDialog process = new ProcessDialog(this, "Running Python program...", cmd);
-        process.start();
-    }
-
-    private void runMachineCodeProgram() {
-        String cmd = getPathWithoutExtension();
-        ProcessDialog process = new ProcessDialog(this, "Running machine code program...", cmd);
-        process.start();
     }
 
     private void enableDisableMenuItems() {
@@ -461,19 +409,33 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection, null);
         } else if (e.getSource() == compileJavaProgram) {
-            compileJavaProgram();
+            String cmd = "javac " + currentFile.getPath();
+	    ProcessController process = new ProcessController(this, "Compiling Java program...", cmd);
+             process.start();
         } else if (e.getSource() == compileCProgram) {
-            compileCProgram();
+            
         } else if (e.getSource() == compileCPPProgram) {
-            compileCPPProgram();
+            
         } else if (e.getSource() == compileNASMProgram) {
-            compileNASMProgram();
+            String cmd = "nasm -fmacho64 " + currentFile.getPath();
+	    ProcessController process = new ProcessController(this, "Compiling NASM program...", cmd);
+	    process.start();
         } else if (e.getSource() == runJavaProgram) {
-            runJavaProgram();
+            String classname = getFilenameWithoutExtension();
+	    String args = JOptionPane.showInputDialog("Java program arguments:", "");
+	    String cmd = "java -cp " + currentFile.getParent() + " " + classname;
+	    if (args != null & args.length() > 0)
+		cmd += " " + args;
+	    ProcessController process = new ProcessController(this, "Running Java program...", cmd);
+	    process.start();
         } else if (e.getSource() == runPythonProgram) {
-            runPythonProgram();
+            String cmd = "python " + currentFile.getPath();
+            ProcessController process = new ProcessController(this, "Running Python program...", cmd);
+	    process.start();
         } else if (e.getSource() == runMachineCodeProgram) {
-            runMachineCodeProgram();
+            String cmd = currentFile.getPath();
+	    ProcessController process = new ProcessController(this, "Running machine code program...", cmd);
+            process.start();
         }
     }
 
