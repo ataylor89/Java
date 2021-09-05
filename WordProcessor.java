@@ -80,7 +80,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     public WordProcessor() {
         super("Word Processor");
-	tabWidth = 1;
+        tabWidth = 1;
     }
 
     public WordProcessor(String path) {
@@ -255,13 +255,14 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         }
     }
 
-	 private String getFilenameWithoutExtension() {
-	 		String filename = currentFile.getName();
-			int lio = filename.lastIndexOf(".");
-			if (lio > 0)
-				filename = filename.substring(0, lio);
-			return filename;	
-	 }
+    private String getFilenameWithoutExtension() {
+        String filename = currentFile.getName();
+        int lio = filename.lastIndexOf(".");
+        if (lio > 0) {
+            filename = filename.substring(0, lio);
+        }
+        return filename;
+    }
 
     private void compileJavaProgram() {
         String cmd = "javac " + currentFile.getPath();
@@ -279,15 +280,17 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void runJavaProgram() {
-			String classname = getFilenameWithoutExtension();
+        String classname = getFilenameWithoutExtension();
 
-			String args = JOptionPane.showInputDialog("Java program arguments:", "");
-			if (args != null)
-	    		args = args.trim();
+        String args = JOptionPane.showInputDialog("Java program arguments:", "");
+        if (args != null) {
+            args = args.trim();
+        }
 
         String cmd = "java -cp " + currentFile.getParent() + " " + classname;
-			if (args != null && args.length() > 0)
-	    		cmd += " " + args;
+        if (args != null && args.length() > 0) {
+            cmd += " " + args;
+        }
 
         ProcessDialog process = new ProcessDialog(this, "Running Java program...", cmd);
         process.start();
@@ -310,10 +313,12 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     @Override
-    public void menuDeselected(MenuEvent e) {}
+    public void menuDeselected(MenuEvent e) {
+    }
 
     @Override
-    public void menuCanceled(MenuEvent e) {}
+    public void menuCanceled(MenuEvent e) {
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -345,7 +350,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         } else if (e.getSource() == tabSize) {
             Integer size = (Integer) JOptionPane.showInputDialog(this, "Select tab size", "Tab size", JOptionPane.PLAIN_MESSAGE, null, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, tabSize);
             tabWidth = size.intValue();
-	    textArea.setTabSize(tabWidth);
+            textArea.setTabSize(tabWidth);
         } else if (e.getSource() == lineCount) {
             JOptionPane.showMessageDialog(this, "There are " + textArea.getLineCount() + " lines in the file");
         } else if (e.getSource() == characterCount) {
