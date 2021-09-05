@@ -17,7 +17,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JMenu file;
     private JMenuItem newFile, save, saveAs, open, downloadWebPage, exit;
     private JMenu colors;
-    private JMenuItem fgcolor, bgcolor, whiteblack, whitegray, tealwhite, purplewhite;
+    private JMenuItem fgcolor, bgcolor, whiteblack, whitegray, grayblue, tealwhite, purplewhite;
     private JMenu theme;
     private JMenuItem nimbus, system, metal, ocean;
     private JMenu tools;
@@ -128,6 +128,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         whiteblack.addActionListener(this);
         whitegray = new JMenuItem("White gray");
         whitegray.addActionListener(this);
+	grayblue = new JMenuItem("Gray blue");
+	grayblue.addActionListener(this);
         tealwhite = new JMenuItem("Teal white");
         tealwhite.addActionListener(this);
         purplewhite = new JMenuItem("Purple white");
@@ -136,6 +138,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         colors.add(bgcolor);
         colors.add(whiteblack);
         colors.add(whitegray);
+	colors.add(grayblue);
         colors.add(tealwhite);
         colors.add(purplewhite);
         theme = new JMenu("Theme");
@@ -377,10 +380,14 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
             System.exit(0);
         } else if (e.getSource() == fgcolor) {
-            foregroundColor = JColorChooser.showDialog(null, "Select a foreground color", null);
+            Color color = JColorChooser.showDialog(this, "Select a foreground color", foregroundColor);
+	    if (color != null)
+ 		foregroundColor = color;
             textArea.setForeground(foregroundColor);
         } else if (e.getSource() == bgcolor) {
-            backgroundColor = JColorChooser.showDialog(null, "Select a background color", null);
+            Color color = JColorChooser.showDialog(this, "Select a background color", backgroundColor);
+	    if (color != null)
+		backgroundColor = color;
             textArea.setBackground(backgroundColor);
         } else if (e.getSource() == whiteblack) {
             foregroundColor = Color.BLACK;
@@ -390,6 +397,10 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             foregroundColor = Color.LIGHT_GRAY;
             backgroundColor = Color.WHITE;
             refreshColors();
+        } else if (e.getSource() == grayblue) {
+	    foregroundColor = new Color(0, 0, 204, 255);
+	    backgroundColor = new Color(204, 204, 204, 255);
+	    refreshColors();
         } else if (e.getSource() == tealwhite) {
             foregroundColor = Color.WHITE;
             backgroundColor = new Color(0, 153, 153, 255);
