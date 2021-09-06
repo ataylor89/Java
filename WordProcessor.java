@@ -609,8 +609,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             process.start();
         } else if (e.getSource() == runJavaProgram) {
 	    JavaPanel panel = new JavaPanel();
-            String[] options = new String[] {"Cancel", "Run"};
-            int value = JOptionPane.showOptionDialog(this, panel, "Classpath and Args", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+            String[] options = new String[] {"Cancel", "OK"};
+            int value = JOptionPane.showOptionDialog(this, panel, "Classpath and Args", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (value == 0)
                  return;
             String classpath = panel.getClasspath();
