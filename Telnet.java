@@ -19,23 +19,13 @@ public class Telnet {
 	public void read(BufferedReader in) {
 		try {
 			String line;
-			int contentLength = 0;
-			int numEmptyLines = 0;
+			boolean endOfHtmlDocument = false;
 			while ((line = in.readLine()) != null) {
 				System.out.println(line);
-				if (line.startsWith("Content-Length:")) 
-					contentLength = Integer.parseInt(line.split(" ")[1]);
-				if (line.isEmpty())
-					numEmptyLines++;
-				if (contentLength > 0 && line.isEmpty())
+				if (line.endsWith("</html>"))
+					endOfHtmlDocument = true;
+				if (line.isEmpty() && endOfHtmlDocument)
 					break;
-				if (numEmptyLines == 2)
-					break;
-			}
-			if (contentLength > 0) {
-				char[] buf = new char[contentLength];
-				in.read(buf, 0, contentLength);
-				System.out.println(buf);
 			}
 		} catch (IOException e) {
 			System.err.println(e);
