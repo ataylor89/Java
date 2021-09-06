@@ -142,6 +142,42 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 	}
     }
 
+    private class JavaPanel extends JPanel {
+         private GridBagLayout gridbag;
+         private JTextField classpath, args;
+         public JavaPanel() {
+                gridbag = new GridBagLayout();
+                setLayout(gridbag);
+                JLabel classpathLabel = new JLabel("Classpath: ");
+                classpath = new JTextField(20);
+                JLabel argsLabel = new JLabel("Args: ");
+                args = new JTextField(20);
+                addComponent(classpathLabel, 0, 0, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+                addComponent(classpath, 1, 0, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+                addComponent(argsLabel, 0, 1, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+                addComponent(args, 1, 1, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+         }
+         private void addComponent(Component component, int gridx, int gridy, int gridwidth, int gridheight, int weightx, int weighty, int fill, int anchor) {
+                GridBagConstraints constraints = new GridBagConstraints();
+                constraints.gridx = gridx;
+                constraints.gridy = gridy;
+                constraints.gridwidth = gridwidth;
+                constraints.gridheight = gridheight;
+                constraints.weightx = weightx;
+                constraints.weighty = weighty;
+                constraints.fill = fill;
+                constraints.anchor = anchor;
+                gridbag.setConstraints(component, constraints);
+                add(component);
+         }
+         public String getClasspath() {
+                return classpath.getText();
+         }
+         public String getArgs() {
+                return args.getText();
+         }
+    }
+
     public WordProcessor() {
         super("Word Processor");
         tabWidth = 1;
@@ -544,9 +580,13 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 	 	return;
 	    email(panel.getTo(), panel.getFrom(), panel.getSubject(), textArea.getText(), panel.getFrom(), panel.getPassword());
 	} else if (e.getSource() == compileJavaProgram) {
-            String cmd = "javac " + currentFile.getPath();
+            String classpath = JOptionPane.showInputDialog(this, "Classpath:", "Classpath", JOptionPane.QUESTION_MESSAGE);
+            String cmd = "javac ";
+            if (classpath != null && classpath.length() > 0)
+		cmd += "-classpath " + classpath + " ";
+            cmd += currentFile.getPath();
 	    ProcessController process = new ProcessController(this, "Compiling Java program...", cmd);
-             process.start();
+            process.start();
         } else if (e.getSource() == compileCProgram) {
             String cmd = "gcc -c " + currentFile.getPath() + " -o " + getPathWithoutExtension() + ".o";
 	    ProcessController process = new ProcessController(this, "Compiling C program with gcc...", cmd);
@@ -568,9 +608,17 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             ProcessController process = new ProcessController(this, "Linking object code with ld...", cmd);
             process.start();
         } else if (e.getSource() == runJavaProgram) {
+	    JavaPanel panel = new JavaPanel();
+            String[] options = new String[] {"Cancel", "Run"};
+            int value = JOptionPane.showOptionDialog(this, panel, "Classpath and Args", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+            if (value == 0)
+                 return;
+            String classpath = panel.getClasspath();
+            String args = panel.getArgs();
+            if (classpath == null || classpath.length() == 0)
+                 classpath = currentFile.getParent();
             String classname = getFilenameWithoutExtension();
-	    String args = JOptionPane.showInputDialog(this, "Java runtime arguments:", "Java runtime arguments", JOptionPane.QUESTION_MESSAGE);
-	    String cmd = "java -cp " + currentFile.getParent() + " " + classname;
+	    String cmd = "java -classpath " + classpath + " " + classname;
 	    if (args != null & args.length() > 0)
 		cmd += " " + args;
 	    ProcessController process = new ProcessController(this, "Running Java program...", cmd);
