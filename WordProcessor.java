@@ -9,7 +9,10 @@ import java.awt.datatransfer.*;
 import java.io.*;
 import java.nio.file.*;
 import java.net.*;
+import java.util.*;
 import java.util.stream.*;
+import javax.mail.*;
+import javax.mail.internet.*;
 
 public class WordProcessor extends JFrame implements MenuListener, ActionListener {
 
@@ -22,6 +25,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JMenuItem nimbus, system, metal, ocean;
     private JMenu tools;
     private JMenuItem tabSize, lineCount, characterCount, gotoLine, copyToClipboard;
+    private JMenu email;
+    private JMenuItem parseAndSendEmail;
     private JMenu compile;
     private JMenuItem compileJavaProgram, compileCProgram, compileCPPProgram, compileNASMProgram;
     private JMenu link;
@@ -84,6 +89,57 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             createAndShowDialog();
             runCommand();
         }
+    }
+
+    private class EmailPanel extends JPanel {
+	private GridBagLayout gridbag;
+	private JTextField from, to, subject;
+	private JPasswordField password;
+	public EmailPanel() {
+		gridbag = new GridBagLayout();
+		setLayout(gridbag);
+		JLabel fromLabel = new JLabel("From: ");
+		from = new JTextField();
+		JLabel toLabel = new JLabel("To: ");
+		to = new JTextField();
+		JLabel subjectLabel = new JLabel("Subject: ");
+		subject = new JTextField();
+		JLabel passwordLabel = new JLabel("Password: ");
+		password = new JPasswordField(20);
+		addComponent(fromLabel, 0, 0, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+		addComponent(from, 1, 0, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+		addComponent(toLabel, 0, 1, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+		addComponent(to, 1, 1, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+		addComponent(subjectLabel, 0, 2, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+		addComponent(subject, 1, 2, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+		addComponent(passwordLabel, 0, 3, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+		addComponent(password, 1, 3, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST); 
+	}
+	private void addComponent(Component component, int gridx, int gridy, int gridwidth, int gridheight, int weightx, int weighty, int fill, int anchor) {
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.gridx = gridx;
+		constraints.gridy = gridy;
+		constraints.gridwidth = gridwidth;
+		constraints.gridheight = gridheight;
+		constraints.weightx = weightx;
+		constraints.weighty = weighty;
+		constraints.fill = fill;
+		constraints.anchor = anchor;
+		gridbag.setConstraints(component, constraints);
+		add(component);
+	}
+	public String getFrom() {
+		return from.getText();
+	}
+	public String getTo() {
+		return to.getText();
+	}
+	public String getSubject() {
+		return subject.getText();
+	}		
+	public String getPassword() {
+		return new String(password.getPassword());
+	}
     }
 
     public WordProcessor() {
@@ -170,6 +226,10 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         tools.add(characterCount);
         tools.add(gotoLine);
         tools.add(copyToClipboard);
+	email = new JMenu("Email");
+	parseAndSendEmail = new JMenuItem("Send email");
+	parseAndSendEmail.addActionListener(this);
+	email.add(parseAndSendEmail);
         compile = new JMenu("Compile");
         compileJavaProgram = new JMenuItem("Compile Java program");
         compileJavaProgram.addActionListener(this);
@@ -201,6 +261,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         bar.add(colors);
         bar.add(theme);
         bar.add(tools);
+	bar.add(email);
         bar.add(compile);
         bar.add(link);
         bar.add(run);
@@ -296,6 +357,35 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         }
     }
 
+    private void email(String to, String from, String subject, String body, String username, String password) {
+	String encryptedPassword = password.substring(0, 2) + String.join("", Collections.nCopies(password.length()-4, "*")) + password.substring(password.length()-2);
+	System.out.printf("To: %s\nFrom: %s\nSubject: %s\nUsername: %s\nPassword: %s\nBody: %s\n", to, from, subject, username, encryptedPassword, body);
+	Properties prop = new Properties();
+	prop.put("mail.smtp.host", "smtp.gmail.com");
+	prop.put("mail.smtp.port", "587");
+	prop.put("mail.smtp.starttls.enable", "true");
+	prop.put("mail.smtp.auth", "true");
+	Session session = Session.getInstance(prop, new javax.mail.Authenticator() {
+		@Override
+		protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
+			return new javax.mail.PasswordAuthentication(username, password);
+		}
+	});
+	session.setDebug(true);
+	try {
+		Message message = new MimeMessage(session);
+		message.setFrom(new InternetAddress(from));
+		message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+		message.setSubject(subject);
+		message.setText(body);
+		Transport.send(message);
+	} catch (AddressException e) {
+		System.err.println(e);
+	} catch (MessagingException e) {
+		System.err.println(e);
+	}
+    }
+
     private String getFilenameWithoutExtension() {
         String filename = currentFile.getName();
         int lio = filename.lastIndexOf(".");
@@ -316,6 +406,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     private void enableDisableMenuItems() {
         save.setEnabled(currentFile != null);
+	parseAndSendEmail.setEnabled(currentFile != null);
         compileJavaProgram.setEnabled(currentFile != null);
         compileCProgram.setEnabled(currentFile != null);
         compileCPPProgram.setEnabled(currentFile != null);
@@ -445,7 +536,14 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             StringSelection stringSelection = new StringSelection(textArea.getText());
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection, null);
-        } else if (e.getSource() == compileJavaProgram) {
+        } else if (e.getSource() == parseAndSendEmail) {
+	    EmailPanel panel = new EmailPanel();
+	    String[] options = new String[] {"Cancel", "OK"};
+	    int value = JOptionPane.showOptionDialog(this, panel, "Compose an email", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+	    if (value == 0)
+	 	return;
+	    email(panel.getTo(), panel.getFrom(), panel.getSubject(), textArea.getText(), panel.getFrom(), panel.getPassword());
+	} else if (e.getSource() == compileJavaProgram) {
             String cmd = "javac " + currentFile.getPath();
 	    ProcessController process = new ProcessController(this, "Compiling Java program...", cmd);
              process.start();
