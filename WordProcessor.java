@@ -538,7 +538,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             clipboard.setContents(stringSelection, null);
         } else if (e.getSource() == sendEmail) {
 	    EmailPanel panel = new EmailPanel();
-	    String[] options = new String[] {"Cancel", "OK"};
+	    String[] options = new String[] {"Cancel", "Send"};
 	    int value = JOptionPane.showOptionDialog(this, panel, "Compose an email", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
 	    if (value == 0)
 	 	return;
