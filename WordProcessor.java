@@ -26,7 +26,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JMenu tools;
     private JMenuItem tabSize, lineCount, characterCount, gotoLine, copyToClipboard;
     private JMenu email;
-    private JMenuItem parseAndSendEmail;
+    private JMenuItem sendEmail;
     private JMenu compile;
     private JMenuItem compileJavaProgram, compileCProgram, compileCPPProgram, compileNASMProgram;
     private JMenu link;
@@ -227,9 +227,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         tools.add(gotoLine);
         tools.add(copyToClipboard);
 	email = new JMenu("Email");
-	parseAndSendEmail = new JMenuItem("Send email");
-	parseAndSendEmail.addActionListener(this);
-	email.add(parseAndSendEmail);
+	sendEmail = new JMenuItem("Send email");
+	sendEmail.addActionListener(this);
+	email.add(sendEmail);
         compile = new JMenu("Compile");
         compileJavaProgram = new JMenuItem("Compile Java program");
         compileJavaProgram.addActionListener(this);
@@ -406,7 +406,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     private void enableDisableMenuItems() {
         save.setEnabled(currentFile != null);
-	parseAndSendEmail.setEnabled(currentFile != null);
+	sendEmail.setEnabled(currentFile != null);
         compileJavaProgram.setEnabled(currentFile != null);
         compileCProgram.setEnabled(currentFile != null);
         compileCPPProgram.setEnabled(currentFile != null);
@@ -536,7 +536,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             StringSelection stringSelection = new StringSelection(textArea.getText());
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection, null);
-        } else if (e.getSource() == parseAndSendEmail) {
+        } else if (e.getSource() == sendEmail) {
 	    EmailPanel panel = new EmailPanel();
 	    String[] options = new String[] {"Cancel", "OK"};
 	    int value = JOptionPane.showOptionDialog(this, panel, "Compose an email", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
