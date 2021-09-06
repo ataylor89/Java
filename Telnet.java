@@ -68,7 +68,7 @@ public class Telnet {
 	}
 
 	public static void main(String[] args) {
-		if (args == null || args.length < 2)
+		if (args.length < 2)
 			return;
 		Telnet telnet = new Telnet(args[0], Integer.parseInt(args[1]));
 		telnet.connect();
