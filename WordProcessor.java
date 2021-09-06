@@ -51,7 +51,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
         public ProcessController(JFrame frame, String title, String cmd) {
             this.frame = frame;
-	    this.title = title;
+            this.title = title;
             this.cmd = cmd;
         }
 
@@ -75,7 +75,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
                 BufferedReader bre = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                 int value;
                 while (dialog.isShowing() && process.isAlive()) {
-		    br.lines().forEach(line -> display.append(line + "\n"));
+                    br.lines().forEach(line -> display.append(line + "\n"));
                     bre.lines().forEach(line -> display.append("Error: " + line + "\n"));
                 }
                 process.destroy();
@@ -92,90 +92,102 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private class EmailPanel extends JPanel {
-	private GridBagLayout gridbag;
-	private JTextField from, to, subject;
-	private JPasswordField password;
-	public EmailPanel() {
-		gridbag = new GridBagLayout();
-		setLayout(gridbag);
-		JLabel fromLabel = new JLabel("From: ");
-		from = new JTextField();
-		JLabel toLabel = new JLabel("To: ");
-		to = new JTextField();
-		JLabel subjectLabel = new JLabel("Subject: ");
-		subject = new JTextField();
-		JLabel passwordLabel = new JLabel("Password: ");
-		password = new JPasswordField(20);
-		addComponent(fromLabel, 0, 0, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
-		addComponent(from, 1, 0, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-		addComponent(toLabel, 0, 1, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
-		addComponent(to, 1, 1, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-		addComponent(subjectLabel, 0, 2, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
-		addComponent(subject, 1, 2, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-		addComponent(passwordLabel, 0, 3, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
-		addComponent(password, 1, 3, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST); 
-	}
-	private void addComponent(Component component, int gridx, int gridy, int gridwidth, int gridheight, int weightx, int weighty, int fill, int anchor) {
-		GridBagConstraints constraints = new GridBagConstraints();
-		constraints.gridx = gridx;
-		constraints.gridy = gridy;
-		constraints.gridwidth = gridwidth;
-		constraints.gridheight = gridheight;
-		constraints.weightx = weightx;
-		constraints.weighty = weighty;
-		constraints.fill = fill;
-		constraints.anchor = anchor;
-		gridbag.setConstraints(component, constraints);
-		add(component);
-	}
-	public String getFrom() {
-		return from.getText();
-	}
-	public String getTo() {
-		return to.getText();
-	}
-	public String getSubject() {
-		return subject.getText();
-	}		
-	public String getPassword() {
-		return new String(password.getPassword());
-	}
+
+        private GridBagLayout gridbag;
+        private JTextField from, to, subject;
+        private JPasswordField password;
+
+        public EmailPanel() {
+            gridbag = new GridBagLayout();
+            setLayout(gridbag);
+            JLabel fromLabel = new JLabel("From: ");
+            from = new JTextField();
+            JLabel toLabel = new JLabel("To: ");
+            to = new JTextField();
+            JLabel subjectLabel = new JLabel("Subject: ");
+            subject = new JTextField();
+            JLabel passwordLabel = new JLabel("Password: ");
+            password = new JPasswordField(20);
+            addComponent(fromLabel, 0, 0, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+            addComponent(from, 1, 0, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+            addComponent(toLabel, 0, 1, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+            addComponent(to, 1, 1, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+            addComponent(subjectLabel, 0, 2, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+            addComponent(subject, 1, 2, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+            addComponent(passwordLabel, 0, 3, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+            addComponent(password, 1, 3, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+        }
+
+        private void addComponent(Component component, int gridx, int gridy, int gridwidth, int gridheight, int weightx, int weighty, int fill, int anchor) {
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridx = gridx;
+            constraints.gridy = gridy;
+            constraints.gridwidth = gridwidth;
+            constraints.gridheight = gridheight;
+            constraints.weightx = weightx;
+            constraints.weighty = weighty;
+            constraints.fill = fill;
+            constraints.anchor = anchor;
+            gridbag.setConstraints(component, constraints);
+            add(component);
+        }
+
+        public String getFrom() {
+            return from.getText();
+        }
+
+        public String getTo() {
+            return to.getText();
+        }
+
+        public String getSubject() {
+            return subject.getText();
+        }
+
+        public String getPassword() {
+            return new String(password.getPassword());
+        }
     }
 
     private class JavaPanel extends JPanel {
-         private GridBagLayout gridbag;
-         private JTextField classpath, args;
-         public JavaPanel() {
-                gridbag = new GridBagLayout();
-                setLayout(gridbag);
-                JLabel classpathLabel = new JLabel("Classpath: ");
-                classpath = new JTextField(20);
-                JLabel argsLabel = new JLabel("Args: ");
-                args = new JTextField(20);
-                addComponent(classpathLabel, 0, 0, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
-                addComponent(classpath, 1, 0, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-                addComponent(argsLabel, 0, 1, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
-                addComponent(args, 1, 1, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-         }
-         private void addComponent(Component component, int gridx, int gridy, int gridwidth, int gridheight, int weightx, int weighty, int fill, int anchor) {
-                GridBagConstraints constraints = new GridBagConstraints();
-                constraints.gridx = gridx;
-                constraints.gridy = gridy;
-                constraints.gridwidth = gridwidth;
-                constraints.gridheight = gridheight;
-                constraints.weightx = weightx;
-                constraints.weighty = weighty;
-                constraints.fill = fill;
-                constraints.anchor = anchor;
-                gridbag.setConstraints(component, constraints);
-                add(component);
-         }
-         public String getClasspath() {
-                return classpath.getText();
-         }
-         public String getArgs() {
-                return args.getText();
-         }
+
+        private GridBagLayout gridbag;
+        private JTextField classpath, args;
+
+        public JavaPanel() {
+            gridbag = new GridBagLayout();
+            setLayout(gridbag);
+            JLabel classpathLabel = new JLabel("Classpath: ");
+            classpath = new JTextField(20);
+            JLabel argsLabel = new JLabel("Args: ");
+            args = new JTextField(20);
+            addComponent(classpathLabel, 0, 0, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+            addComponent(classpath, 1, 0, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+            addComponent(argsLabel, 0, 1, 1, 1, 10, 100, GridBagConstraints.NONE, GridBagConstraints.EAST);
+            addComponent(args, 1, 1, 9, 1, 90, 100, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+        }
+
+        private void addComponent(Component component, int gridx, int gridy, int gridwidth, int gridheight, int weightx, int weighty, int fill, int anchor) {
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridx = gridx;
+            constraints.gridy = gridy;
+            constraints.gridwidth = gridwidth;
+            constraints.gridheight = gridheight;
+            constraints.weightx = weightx;
+            constraints.weighty = weighty;
+            constraints.fill = fill;
+            constraints.anchor = anchor;
+            gridbag.setConstraints(component, constraints);
+            add(component);
+        }
+
+        public String getClasspath() {
+            return classpath.getText();
+        }
+
+        public String getArgs() {
+            return args.getText();
+        }
     }
 
     public WordProcessor() {
@@ -201,15 +213,15 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         saveAs.addActionListener(this);
         open = new JMenuItem("Open");
         open.addActionListener(this);
-	downloadWebPage = new JMenuItem("Download web page");
-	downloadWebPage.addActionListener(this);
+        downloadWebPage = new JMenuItem("Download web page");
+        downloadWebPage.addActionListener(this);
         exit = new JMenuItem("Exit");
         exit.addActionListener(this);
         file.add(newFile);
         file.add(save);
         file.add(saveAs);
         file.add(open);
-	file.add(downloadWebPage);
+        file.add(downloadWebPage);
         file.add(exit);
         colors = new JMenu("Colors");
         fgcolor = new JMenuItem("Set foreground color");
@@ -220,8 +232,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         whiteblack.addActionListener(this);
         whitegray = new JMenuItem("White gray");
         whitegray.addActionListener(this);
-	grayblue = new JMenuItem("Gray blue");
-	grayblue.addActionListener(this);
+        grayblue = new JMenuItem("Gray blue");
+        grayblue.addActionListener(this);
         tealwhite = new JMenuItem("Teal white");
         tealwhite.addActionListener(this);
         purplewhite = new JMenuItem("Purple white");
@@ -230,7 +242,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         colors.add(bgcolor);
         colors.add(whiteblack);
         colors.add(whitegray);
-	colors.add(grayblue);
+        colors.add(grayblue);
         colors.add(tealwhite);
         colors.add(purplewhite);
         theme = new JMenu("Theme");
@@ -262,10 +274,10 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         tools.add(characterCount);
         tools.add(gotoLine);
         tools.add(copyToClipboard);
-	email = new JMenu("Email");
-	sendEmail = new JMenuItem("Send email");
-	sendEmail.addActionListener(this);
-	email.add(sendEmail);
+        email = new JMenu("Email");
+        sendEmail = new JMenuItem("Send email");
+        sendEmail.addActionListener(this);
+        email.add(sendEmail);
         compile = new JMenu("Compile");
         compileJavaProgram = new JMenuItem("Compile Java program");
         compileJavaProgram.addActionListener(this);
@@ -280,7 +292,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         compile.add(compileCPPProgram);
         compile.add(compileNASMProgram);
         link = new JMenu("Link");
-        linkObjectCode = new JMenuItem("Link object code"); 
+        linkObjectCode = new JMenuItem("Link object code");
         linkObjectCode.addActionListener(this);
         link.add(linkObjectCode);
         run = new JMenu("Run");
@@ -297,7 +309,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         bar.add(colors);
         bar.add(theme);
         bar.add(tools);
-	bar.add(email);
+        bar.add(email);
         bar.add(compile);
         bar.add(link);
         bar.add(run);
@@ -394,32 +406,32 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void email(String to, String from, String subject, String body, String username, String password) {
-	String encryptedPassword = password.substring(0, 2) + String.join("", Collections.nCopies(password.length()-4, "*")) + password.substring(password.length()-2);
-	System.out.printf("To: %s\nFrom: %s\nSubject: %s\nUsername: %s\nPassword: %s\nBody: %s\n", to, from, subject, username, encryptedPassword, body);
-	Properties prop = new Properties();
-	prop.put("mail.smtp.host", "smtp.gmail.com");
-	prop.put("mail.smtp.port", "587");
-	prop.put("mail.smtp.starttls.enable", "true");
-	prop.put("mail.smtp.auth", "true");
-	Session session = Session.getInstance(prop, new javax.mail.Authenticator() {
-		@Override
-		protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
-			return new javax.mail.PasswordAuthentication(username, password);
-		}
-	});
-	session.setDebug(true);
-	try {
-		Message message = new MimeMessage(session);
-		message.setFrom(new InternetAddress(from));
-		message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-		message.setSubject(subject);
-		message.setText(body);
-		Transport.send(message);
-	} catch (AddressException e) {
-		System.err.println(e);
-	} catch (MessagingException e) {
-		System.err.println(e);
-	}
+        String encryptedPassword = password.substring(0, 2) + String.join("", Collections.nCopies(password.length() - 4, "*")) + password.substring(password.length() - 2);
+        System.out.printf("To: %s\nFrom: %s\nSubject: %s\nUsername: %s\nPassword: %s\nBody: %s\n", to, from, subject, username, encryptedPassword, body);
+        Properties prop = new Properties();
+        prop.put("mail.smtp.host", "smtp.gmail.com");
+        prop.put("mail.smtp.port", "587");
+        prop.put("mail.smtp.starttls.enable", "true");
+        prop.put("mail.smtp.auth", "true");
+        Session session = Session.getInstance(prop, new javax.mail.Authenticator() {
+            @Override
+            protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
+                return new javax.mail.PasswordAuthentication(username, password);
+            }
+        });
+        session.setDebug(true);
+        try {
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(from));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+            message.setSubject(subject);
+            message.setText(body);
+            Transport.send(message);
+        } catch (AddressException e) {
+            System.err.println(e);
+        } catch (MessagingException e) {
+            System.err.println(e);
+        }
     }
 
     private String getFilenameWithoutExtension() {
@@ -442,7 +454,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     private void enableDisableMenuItems() {
         save.setEnabled(currentFile != null);
-	sendEmail.setEnabled(currentFile != null);
+        sendEmail.setEnabled(currentFile != null);
         compileJavaProgram.setEnabled(currentFile != null);
         compileCProgram.setEnabled(currentFile != null);
         compileCPPProgram.setEnabled(currentFile != null);
@@ -488,33 +500,35 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             enableDisableMenuItems();
         } else if (e.getSource() == downloadWebPage) {
             promptForSave();
-	    newFile();
-	    String address = JOptionPane.showInputDialog(this, "URL:", "Download web page", JOptionPane.QUESTION_MESSAGE);
-	    try {
-		URL url = new URL(address);
+            newFile();
+            String address = JOptionPane.showInputDialog(this, "URL:", "Download web page", JOptionPane.QUESTION_MESSAGE);
+            try {
+                URL url = new URL(address);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-	   	connection.connect();
-		BufferedReader br = new BufferedReader(new InputStreamReader((InputStream) connection.getContent()));
-		String text = br.lines().collect(Collectors.joining("\n"));
-		textArea.setText(text);
-	    } catch (MalformedURLException ex) {
-		System.err.println(ex);
-	    } catch (IOException ex) {
-		System.err.println(ex);
-	    }
-	    enableDisableMenuItems();
-	} else if (e.getSource() == exit) {
+                connection.connect();
+                BufferedReader br = new BufferedReader(new InputStreamReader((InputStream) connection.getContent()));
+                String text = br.lines().collect(Collectors.joining("\n"));
+                textArea.setText(text);
+            } catch (MalformedURLException ex) {
+                System.err.println(ex);
+            } catch (IOException ex) {
+                System.err.println(ex);
+            }
+            enableDisableMenuItems();
+        } else if (e.getSource() == exit) {
             dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
             System.exit(0);
         } else if (e.getSource() == fgcolor) {
             Color color = JColorChooser.showDialog(this, "Select a foreground color", foregroundColor);
-	    if (color != null)
- 		foregroundColor = color;
+            if (color != null) {
+                foregroundColor = color;
+            }
             textArea.setForeground(foregroundColor);
         } else if (e.getSource() == bgcolor) {
             Color color = JColorChooser.showDialog(this, "Select a background color", backgroundColor);
-	    if (color != null)
-		backgroundColor = color;
+            if (color != null) {
+                backgroundColor = color;
+            }
             textArea.setBackground(backgroundColor);
         } else if (e.getSource() == whiteblack) {
             foregroundColor = Color.BLACK;
@@ -525,9 +539,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             backgroundColor = Color.WHITE;
             refreshColors();
         } else if (e.getSource() == grayblue) {
-	    foregroundColor = new Color(0, 0, 204, 255);
-	    backgroundColor = new Color(204, 204, 204, 255);
-	    refreshColors();
+            foregroundColor = new Color(0, 0, 204, 255);
+            backgroundColor = new Color(204, 204, 204, 255);
+            refreshColors();
         } else if (e.getSource() == tealwhite) {
             foregroundColor = Color.WHITE;
             backgroundColor = new Color(0, 153, 153, 255);
@@ -573,63 +587,72 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection, null);
         } else if (e.getSource() == sendEmail) {
-	    EmailPanel panel = new EmailPanel();
-	    String[] options = new String[] {"Cancel", "Send"};
-	    int value = JOptionPane.showOptionDialog(this, panel, "Compose an email", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
-	    if (value == 0)
-	 	return;
-	    email(panel.getTo(), panel.getFrom(), panel.getSubject(), textArea.getText(), panel.getFrom(), panel.getPassword());
-	} else if (e.getSource() == compileJavaProgram) {
+            EmailPanel panel = new EmailPanel();
+            String[] options = new String[]{"Cancel", "Send"};
+            int value = JOptionPane.showOptionDialog(this, panel, "Compose an email", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+            if (value == 0) {
+                return;
+            }
+            email(panel.getTo(), panel.getFrom(), panel.getSubject(), textArea.getText(), panel.getFrom(), panel.getPassword());
+        } else if (e.getSource() == compileJavaProgram) {
             String classpath = JOptionPane.showInputDialog(this, "Classpath:", "Classpath", JOptionPane.QUESTION_MESSAGE);
             String cmd = "javac ";
-            if (classpath != null && classpath.length() > 0)
-		cmd += "-classpath " + classpath + " ";
+            if (classpath != null && classpath.length() > 0) {
+                cmd += "-classpath " + classpath + " ";
+            }
             cmd += currentFile.getPath();
-	    ProcessController process = new ProcessController(this, "Compiling Java program...", cmd);
+            ProcessController process = new ProcessController(this, "Compiling Java program...", cmd);
             process.start();
         } else if (e.getSource() == compileCProgram) {
-            String cmd = "gcc -c " + currentFile.getPath() + " -o " + getPathWithoutExtension() + ".o";
-	    ProcessController process = new ProcessController(this, "Compiling C program with gcc...", cmd);
-	    process.start();
+            String cmd = "gcc " + currentFile.getPath() + " -o " + getPathWithoutExtension();
+            ProcessController process = new ProcessController(this, "Compiling C program with gcc...", cmd);
+            process.start();
         } else if (e.getSource() == compileCPPProgram) {
             String cmd = "g++ -c " + currentFile.getPath() + " -o " + getPathWithoutExtension() + ".o";
-	    ProcessController process = new ProcessController(this, "Compiling C++ program with g++", cmd);
+            ProcessController process = new ProcessController(this, "Compiling C++ program with g++", cmd);
             process.start();
         } else if (e.getSource() == compileNASMProgram) {
             String cmd = "nasm -fmacho64 " + currentFile.getPath();
-	    ProcessController process = new ProcessController(this, "Compiling NASM program...", cmd);
-	    process.start();
+            ProcessController process = new ProcessController(this, "Compiling NASM program...", cmd);
+            process.start();
         } else if (e.getSource() == linkObjectCode) {
             String sharedLibraries = JOptionPane.showInputDialog(this, "Shared libraries:", "Shared libraries", JOptionPane.QUESTION_MESSAGE);
             String cmd = "ld -macosx_version_min 10.7 ";
-            if (sharedLibraries != null && sharedLibraries.length() > 0)
-                 cmd += sharedLibraries + " ";
+            if (sharedLibraries != null && sharedLibraries.length() > 0) {
+                cmd += sharedLibraries + " ";
+            }
             cmd += getPathWithoutExtension() + ".o -o " + getPathWithoutExtension();
             ProcessController process = new ProcessController(this, "Linking object code with ld...", cmd);
             process.start();
         } else if (e.getSource() == runJavaProgram) {
-	    JavaPanel panel = new JavaPanel();
-            String[] options = new String[] {"Cancel", "OK"};
+            JavaPanel panel = new JavaPanel();
+            String[] options = new String[]{"Cancel", "OK"};
             int value = JOptionPane.showOptionDialog(this, panel, "Classpath and Args", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-            if (value == 0)
-                 return;
+            if (value == 0) {
+                return;
+            }
             String classpath = panel.getClasspath();
             String args = panel.getArgs();
-            if (classpath == null || classpath.length() == 0)
-                 classpath = currentFile.getParent();
+            if (classpath == null || classpath.length() == 0) {
+                classpath = currentFile.getParent();
+            }
             String classname = getFilenameWithoutExtension();
-	    String cmd = "java -classpath " + classpath + " " + classname;
-	    if (args != null & args.length() > 0)
-		cmd += " " + args;
-	    ProcessController process = new ProcessController(this, "Running Java program...", cmd);
-	    process.start();
+            String cmd = "java -classpath " + classpath + " " + classname;
+            if (args != null & args.length() > 0) {
+                cmd += " " + args;
+            }
+            ProcessController process = new ProcessController(this, "Running Java program...", cmd);
+            process.start();
         } else if (e.getSource() == runPythonProgram) {
             String cmd = "python " + currentFile.getPath();
             ProcessController process = new ProcessController(this, "Running Python program...", cmd);
-	    process.start();
+            process.start();
         } else if (e.getSource() == runMachineCodeProgram) {
+	    String args = JOptionPane.showInputDialog(this, "Args:", "Runtime arguments", JOptionPane.QUESTION_MESSAGE);
             String cmd = getPathWithoutExtension();
-	    ProcessController process = new ProcessController(this, "Running machine code program...", cmd);
+	    if (args != null && args.length() > 0)
+		cmd += " " + args;
+            ProcessController process = new ProcessController(this, "Running machine code program...", cmd);
             process.start();
         }
     }
@@ -637,8 +660,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     public static void main(String[] args) {
         WordProcessor.setLookAndFeel();
         WordProcessor wordProcessor = new WordProcessor();
-	if (args != null && args.length > 0)
-        	    wordProcessor.setFilePath(args[0]);
+        if (args != null && args.length > 0) {
+            wordProcessor.setFilePath(args[0]);
+        }
         wordProcessor.createAndShowGui();
         wordProcessor.setVisible(true);
     }
