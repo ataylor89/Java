@@ -327,12 +327,19 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         }
     }
 
+    public static void setupKeyStrokes() {
+	InputMap im = (InputMap) UIManager.get("TextArea.focusInputMap");
+	im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), DefaultEditorKit.copyAction);
+	im.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.META_DOWN_MASK), DefaultEditorKit.pasteAction);
+    }
+
     public static void setLookAndFeel() {
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception e) {
             System.err.println(e);
         }
+	setupKeyStrokes();
     }
 
     private void setLookAndFeel(LookAndFeel lookAndFeel) {
@@ -342,6 +349,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             System.err.println(e);
         }
         SwingUtilities.updateComponentTreeUI(this);
+	setupKeyStrokes();
     }
 
     private void setLookAndFeel(String className) {
@@ -351,6 +359,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             System.err.println(e);
         }
         SwingUtilities.updateComponentTreeUI(this);
+	setupKeyStrokes();
     }
 
     private void promptForSave() {
@@ -488,16 +497,13 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         if (e.getSource() == newFile) {
             promptForSave();
             newFile();
-            enableDisableMenuItems();
         } else if (e.getSource() == save) {
             saveToFile(currentFile);
         } else if (e.getSource() == saveAs) {
             saveToFileAs();
-            enableDisableMenuItems();
         } else if (e.getSource() == open) {
             promptForSave();
             openFile();
-            enableDisableMenuItems();
         } else if (e.getSource() == downloadWebPage) {
             promptForSave();
             newFile();

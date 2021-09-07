@@ -33,6 +33,18 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
         public static Map<String, String> dataToDisplayMap;
         public static Map<String, String> editableFieldMap;
 
+	static {
+            dataToDisplayMap = new HashMap<>();
+            editableFieldMap = new HashMap<>();
+            dataToDisplayMap.put("0", "");
+            editableFieldMap.put("", "0");
+            for (int i = 0; i < 9; i++) {
+                editableFieldMap.put(String.valueOf(i+1), String.valueOf((char) ('a' + i)));
+                dataToDisplayMap.put(String.valueOf(i+1), String.valueOf(i+1));
+                dataToDisplayMap.put(String.valueOf((char) ('a' + i)), String.valueOf(i+1));
+            } 
+        }
+
 	public static String dataToDisplay(String data) {
             return dataToDisplayMap.get(data);
         }
@@ -44,18 +56,6 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
              else {
                  return field.getText();
              }
-        }
-
-        static {
-            dataToDisplayMap = new HashMap<>();
-            editableFieldMap = new HashMap<>();
-            dataToDisplayMap.put("0", "");
-            editableFieldMap.put("", "0");
-            for (int i = 0; i < 9; i++) {
-                editableFieldMap.put(String.valueOf(i+1), String.valueOf((char) ('a' + i)));
-                dataToDisplayMap.put(String.valueOf(i+1), String.valueOf(i+1));
-                dataToDisplayMap.put(String.valueOf((char) ('a' + i)), String.valueOf(i+1));
-            } 
         }
     }
 
