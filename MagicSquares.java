@@ -30,8 +30,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
     private boolean highlightingOn = false;
 
     public static class CharacterEncoding {
-        public static Map<String, String> dataToDisplayMap;
-        public static Map<String, String> editableFieldMap;
+        public static Map<String, String> dataToDisplayMap, editableFieldMap;
 
 	static {
             dataToDisplayMap = new HashMap<>();
