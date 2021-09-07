@@ -50,12 +50,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
         }
 
         public static String displayToData(JTextField field) {
-             if (field.isEditable()) {
-                 return editableFieldMap.get(field.getText());
-             }
-             else {
-                 return field.getText();
-             }
+             return field.isEditable() ? editableFieldMap.get(field.getText()) : field.getText();
         }
     }
 
