@@ -35,6 +35,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         bar = new JMenuBar();
         file = new JMenu("File");
+	file.addMenuListener(this);
 	newFile = new JMenuItem("New");
 	newFile.addActionListener(this);
         saveFile = new JMenuItem("Save");
@@ -202,6 +203,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
 		BufferedReader br = new BufferedReader(new InputStreamReader((InputStream) connection.getContent()));
 		String text = br.lines().collect(Collectors.joining("\n"));
 		load(text);
+		currentFile = null;
 	} catch (MalformedURLException ex) {
 		System.err.println(ex);
 	} catch (IOException ex) {
@@ -301,24 +303,20 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
     public void actionPerformed(ActionEvent e) {
 	if (e.getSource() == newFile) {
 	    newFile();
-	    enableDisableMenuItems();
 	}
         else if (e.getSource() == saveFile) {
             saveToFile(currentFile);
         }
 	else if (e.getSource() == saveFileAs) {
 	    saveToFileAs();
-	    enableDisableMenuItems();
 	}
         else if (e.getSource() == openFile) {
             openFile();
-	    enableDisableMenuItems();
         }
         else if (e.getSource() == download) {
            String url = JOptionPane.showInputDialog(this, "URL:", "Download puzzle from the internet", JOptionPane.QUESTION_MESSAGE);
 	   if (url != null && url.length() > 0) {
 		download(url);
-		enableDisableMenuItems();
 	   }   
         }
         else if (e.getSource() == setForegroundColor) {
@@ -406,6 +404,12 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
 
     public void keyReleased(KeyEvent e) {}
 
+    private static void setupKeyStrokes() {
+	InputMap im = (InputMap) UIManager.get("TextField.focusInputMap");
+	im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), DefaultEditorKit.copyAction);
+	im.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.META_DOWN_MASK), DefaultEditorKit.pasteAction);
+    }
+
     public void setLookAndFeel(String className) {
         try {
             UIManager.setLookAndFeel(className);
@@ -413,6 +417,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
             System.err.println(e);
         }
         SwingUtilities.updateComponentTreeUI(this);
+	setupKeyStrokes();
     }
 
     public void setLookAndFeel(LookAndFeel lookAndFeel) {
@@ -422,6 +427,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
             System.err.println(e);
         }
         SwingUtilities.updateComponentTreeUI(this);
+	setupKeyStrokes();
     }
 
     public static void setLookAndFeel() {
@@ -430,6 +436,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
         } catch (Exception e) {
             System.err.println(e);
         }
+	setupKeyStrokes();
     }
 
     public static void main(String[] args) {
