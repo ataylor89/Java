@@ -1,25 +1,33 @@
 import javax.swing.*;
 import javax.swing.text.*;
+import javax.swing.border.*;
 import javax.swing.plaf.metal.*;
+import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.nio.file.*;
+import java.util.*;
+import java.util.stream.*;
+import java.net.*;
 
-public class MagicSquares extends JFrame implements ActionListener {
+public class MagicSquares extends JFrame implements MenuListener, ActionListener, KeyListener {
     
     private JMenuBar bar;
     private JMenu file;
-    private JMenuItem save, open, colors, exit;
+    private JMenuItem newFile, saveFile, saveFileAs, openFile, download, exit;
+    private JMenu colors;
+    private JMenuItem setForegroundColor, setBackgroundColor, setHighlightColor, whiteblack, whitegray, grayblue, tealwhite, purplewhite;
     private JMenu theme;
     private JMenuItem nimbus, system, metal, ocean;
-    private JDialog colorsDialog;
-    private JPanel colorsDialogPanel;
-    private JButton setForegroundColor, setBackgroundColor, saveColors;
-    private Color foregroundColor, backgroundColor;
+    private JMenu validate;
+    private JMenuItem validateSquares;
+    private Color foregroundColor, backgroundColor, highlightColor;
     private JPanel panel;
     private JTextField[][] grid;
     private JFileChooser fileChooser;
+    private File currentFile;
+    private boolean highlightingOn = false;
 
     public MagicSquares() {
         super("Magic Squares");
@@ -27,35 +35,49 @@ public class MagicSquares extends JFrame implements ActionListener {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         bar = new JMenuBar();
         file = new JMenu("File");
-        save = new JMenuItem("Save");
-        save.addActionListener(this);
-        open = new JMenuItem("Open");
-        open.addActionListener(this);
-        colors = new JMenuItem("Colors");
-        colors.addActionListener(this);
+	newFile = new JMenuItem("New");
+	newFile.addActionListener(this);
+        saveFile = new JMenuItem("Save");
+        saveFile.addActionListener(this);
+	saveFileAs = new JMenuItem("Save as");
+	saveFileAs.addActionListener(this);
+        openFile = new JMenuItem("Open");
+        openFile.addActionListener(this);
+	download = new JMenuItem("Download");
+	download.addActionListener(this);
         exit = new JMenuItem("Exit");
         exit.addActionListener(this);
-        file.add(save);
-        file.add(open);
-        file.add(colors);
+	file.add(newFile);
+        file.add(saveFile);
+	file.add(saveFileAs);
+        file.add(openFile);
+	file.add(download);
         file.add(exit);
-        colorsDialog = new JDialog(this, "Colors");
-        colorsDialog.setSize(500, 500);
-        colorsDialogPanel = new JPanel();
-        colorsDialogPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        setForegroundColor = new JButton("Foreground color");
-        setForegroundColor.setSize(50, 50);
+	colors = new JMenu("Colors");
+        setForegroundColor = new JMenuItem("Set foreground color");
         setForegroundColor.addActionListener(this);
-        colorsDialogPanel.add(setForegroundColor);
-        setBackgroundColor = new JButton("Background color");
-        setBackgroundColor.setSize(50, 50);
+        setBackgroundColor = new JMenuItem("Set background color");
         setBackgroundColor.addActionListener(this);
-        colorsDialogPanel.add(setBackgroundColor);
-        saveColors = new JButton("Save and close");
-        saveColors.setSize(50, 50);
-        saveColors.addActionListener(this);
-        colorsDialogPanel.add(saveColors);
-        colorsDialog.add(colorsDialogPanel);
+ 	setHighlightColor = new JMenuItem("Set highlight color");
+       	setHighlightColor.addActionListener(this);
+	whiteblack = new JMenuItem("White black");
+	whiteblack.addActionListener(this);
+	whitegray = new JMenuItem("White gray");
+	whitegray.addActionListener(this);
+	grayblue = new JMenuItem("Gray blue");
+	grayblue.addActionListener(this);
+	tealwhite = new JMenuItem("Teal white");
+	tealwhite.addActionListener(this);
+	purplewhite = new JMenuItem("Purple white");
+	purplewhite.addActionListener(this);
+	colors.add(setForegroundColor);
+	colors.add(setBackgroundColor);
+	colors.add(setHighlightColor);
+	colors.add(whiteblack);
+	colors.add(whitegray);
+	colors.add(grayblue);
+	colors.add(tealwhite);
+	colors.add(purplewhite);
         theme = new JMenu("Theme");
         nimbus = new JMenuItem("Nimbus");
         nimbus.addActionListener(this);
@@ -69,8 +91,14 @@ public class MagicSquares extends JFrame implements ActionListener {
         theme.add(system);
         theme.add(metal);
         theme.add(ocean);
+	validate = new JMenu("Validate");
+	validateSquares = new JMenuItem("Validate 9x9 grid");
+	validateSquares.addActionListener(this);
+	validate.add(validateSquares);
         bar.add(file);
+	bar.add(colors);
         bar.add(theme);
+	bar.add(validate);
         setJMenuBar(bar);
         panel = new JPanel();
         panel.setLayout(new GridLayout(9, 9));
@@ -93,6 +121,7 @@ public class MagicSquares extends JFrame implements ActionListener {
                         super.insertString(offs, str, a);
                     }
                 });
+		grid[i][j].addKeyListener(this);
                 panel.add(grid[i][j]);
             }
         }
@@ -100,7 +129,7 @@ public class MagicSquares extends JFrame implements ActionListener {
         fileChooser = new JFileChooser();
     }
 
-    private void setColors() {
+    private void refreshColors() {
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 grid[i][j].setForeground(foregroundColor);
@@ -109,30 +138,46 @@ public class MagicSquares extends JFrame implements ActionListener {
         }
     }
 
-    private void saveToFile() {
-        int returnVal = fileChooser.showSaveDialog(this);
-        
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            try {
-                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
-                String str = "";
-                for (int i = 0; i < 9; i++) {
-                    for (int j = 0; j < 9; j++) {
-                        String s = grid[i][j].getText();
-                        if (s.equals(""))
-                            s = "0";
-                        str += s;
-                    }
-                    str += "\n";
-                }
+    private void newFile() {
+	currentFile = null;
+	foregroundColor = Color.BLACK;
+	backgroundColor = Color.WHITE;
+	for (int i = 0; i < 9; i++) {
+	    for (int j = 0; j < 9; j++) {
+		grid[i][j].setText("");
+		grid[i][j].setForeground(foregroundColor);
+		grid[i][j].setBackground(backgroundColor);
+	    }
+	}
+    }
 
-                bufferedWriter.write(str);
-                bufferedWriter.close();
-            } catch (IOException ex) {
-                System.err.println(ex);
+    private void saveToFile(File file) {
+	try {
+	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
+	    String str = "";
+	    for (int i = 0; i < 9; i++) {
+	        for (int j = 0; j < 9; j++) {
+		    String s = grid[i][j].getText();
+		    if (s.equals(""))
+		        s = "0";
+		    str += s;
+                }
+                str += "\n";
             }
+            bufferedWriter.write(str);
+            bufferedWriter.close();
+        } catch (IOException ex) {
+            System.err.println(ex);
         }
+    }
+
+    private void saveToFileAs() {
+	int returnVal = fileChooser.showSaveDialog(this);
+
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    currentFile = fileChooser.getSelectedFile();
+	    saveToFile(currentFile);
+	}
     }
 
     private void openFile() {
@@ -142,40 +187,185 @@ public class MagicSquares extends JFrame implements ActionListener {
             File file = fileChooser.getSelectedFile();
             try {
                 String text = new String(Files.readAllBytes(file.toPath()));
-                String[] lines = text.split("\n");
-                for (int i = 0; i < lines.length; i++) {
-                    for (int j = 0; j < lines[i].length(); j++) {
-                        char c = lines[i].charAt(j);
-                        if (c >= '1' || c <= '9')
-                            grid[i][j].setText(String.valueOf(c));
-                    }
-                }
-            } catch (IOException ex) {
-                System.err.println(ex);
+		load(text);
+	    } catch (IOException ex) {
+	    	System.err.println(ex);
+	    }
+	}
+     }
+
+     private void download(String address) {
+	try {
+		URL url = new URL(address);
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.connect();
+		BufferedReader br = new BufferedReader(new InputStreamReader((InputStream) connection.getContent()));
+		String text = br.lines().collect(Collectors.joining("\n"));
+		load(text);
+	} catch (MalformedURLException ex) {
+		System.err.println(ex);
+	} catch (IOException ex) {
+		System.err.println(ex);
+	}
+     }
+
+     private void load(String text) {
+     	String[] lines = text.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+     	    for (int j = 0; j < lines[i].length(); j++) {
+                char c = lines[i].charAt(j);
+                if (c >= '1' || c <= '9')
+                    grid[i][j].setText(String.valueOf(c));
             }
         }
     }
 
+    private int getValueAt(int row, int col) {
+	String s = grid[row][col].getText();
+        if (s.equals(""))
+	    return 0;
+	return Integer.parseInt(s);
+    }
+
+    private void removeHighlighting() {
+	for (int row = 0; row < 9; row++) {
+		for (int col = 0; col < 9; col++) {
+			grid[row][col].setBorder(BorderFactory.createEmptyBorder());
+		}
+	}
+	highlightingOn = false;
+    }
+
+    private void highlightErrors(boolean[][] result) {
+	for (int row = 0; row < 9; row++) {
+	    if (!result[0][row]) {
+		for (int col = 0; col < 9; col++) {
+		    grid[row][col].setBorder(new LineBorder(highlightColor, 2));
+		}
+	    } 
+	}
+	for (int col = 0; col < 9; col++) {
+	    if (!result[1][col]) {
+		for (int row = 0; row < 9; row++) {
+		    grid[row][col].setBorder(new LineBorder(highlightColor, 2));
+		}
+	    }
+	}
+	highlightingOn = true;
+    }
+
+    private boolean[][] validatePuzzle() {
+        boolean[][] result = new boolean[2][9];
+        boolean[] values = new boolean[10];
+	for (int row = 0; row < 9; row++) {
+	    Arrays.fill(values, false);
+	    for (int col = 0; col < 9; col++) {
+		int value = getValueAt(row, col);
+		values[value] = true;
+	    }
+	    result[0][row] = IntStream.range(1, 10).filter(i->values[i]).count() == 9;
+	}
+	for (int col = 0; col < 9; col++) {
+	    Arrays.fill(values, false);
+            for (int row = 0; row < 9; row++) {
+		int value = getValueAt(row, col);
+		values[value] = true;
+            }
+	    result[1][col] = IntStream.range(1, 10).filter(i->values[i]).count() == 9;
+        }
+	return result;
+    }
+
+    private boolean isSolved(boolean[][] result) {
+	for (int i = 0; i < 2; i++) {
+	    for (int j = 0; j < 9; j++) {
+		if (!result[i][j])
+		    return false;
+	    }
+	}
+	return true;
+    }
+
+    private void enableDisableMenuItems() {
+	saveFile.setEnabled(currentFile != null);
+    }
+
+    public void menuSelected(MenuEvent e) {
+	enableDisableMenuItems();
+    }
+
+    public void menuDeselected(MenuEvent e) {}
+
+    public void menuCanceled(MenuEvent e) {}
+
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == save) {
-            saveToFile();
+	if (e.getSource() == newFile) {
+	    newFile();
+	    enableDisableMenuItems();
+	}
+        else if (e.getSource() == saveFile) {
+            saveToFile(currentFile);
         }
-        else if (e.getSource() == open) {
+	else if (e.getSource() == saveFileAs) {
+	    saveToFileAs();
+	    enableDisableMenuItems();
+	}
+        else if (e.getSource() == openFile) {
             openFile();
+	    enableDisableMenuItems();
         }
-        else if (e.getSource() == colors) {
-            colorsDialog.setVisible(true);           
+        else if (e.getSource() == download) {
+           String url = JOptionPane.showInputDialog(this, "URL:", "Download puzzle from the internet", JOptionPane.QUESTION_MESSAGE);
+	   if (url != null && url.length() > 0) {
+		download(url);
+		enableDisableMenuItems();
+	   }   
         }
         else if (e.getSource() == setForegroundColor) {
-            foregroundColor = JColorChooser.showDialog(null, "Select a foreground color", null);
+            Color color = JColorChooser.showDialog(null, "Select a foreground color", foregroundColor);
+	    if (color != null) {
+		foregroundColor = color;
+	    	refreshColors();
+	    }
         }
         else if (e.getSource() == setBackgroundColor) {
-            backgroundColor = JColorChooser.showDialog(null, "Select a background color", null);
+            Color color = JColorChooser.showDialog(null, "Select a background color", backgroundColor);
+	    if (color != null) {
+		backgroundColor = color;
+	    	refreshColors();
+	    }
         }
-        else if (e.getSource() == saveColors) {
-            setColors();
-            colorsDialog.setVisible(false);
+        else if (e.getSource() == setHighlightColor) {
+            Color color = JColorChooser.showDialog(this, "Select a highlight color", highlightColor);
+	    if (color != null) {
+		highlightColor = color;
+	    }
         }
+	else if (e.getSource() == whiteblack) {
+	    foregroundColor = Color.BLACK;
+	    backgroundColor = Color.WHITE;
+	    refreshColors();
+	}
+	else if (e.getSource() == whitegray) {
+	    foregroundColor = Color.LIGHT_GRAY;
+	    backgroundColor = Color.WHITE;
+	    refreshColors();
+	}
+	else if (e.getSource() == grayblue) {
+	    foregroundColor = new Color(0, 0, 204, 255);
+	    backgroundColor = new Color(204, 204, 204, 255);
+            refreshColors();
+	}
+	else if (e.getSource() == tealwhite) {
+	    foregroundColor = Color.WHITE;
+	    backgroundColor = new Color(0, 153, 153, 255);
+	    refreshColors();
+	}
+	else if (e.getSource() == purplewhite) {
+	    foregroundColor = Color.WHITE;
+	    backgroundColor = new Color(153, 0, 153, 255);
+	    refreshColors();
+	}
         else if (e.getSource() == nimbus) {
             setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         }
@@ -190,11 +380,31 @@ public class MagicSquares extends JFrame implements ActionListener {
             MetalLookAndFeel.setCurrentTheme(new OceanTheme());
             setLookAndFeel(new MetalLookAndFeel());
         }
+	else if (e.getSource() == validateSquares) {
+	    boolean[][] result = validatePuzzle();
+	    if (isSolved(result)) {
+		JOptionPane.showMessageDialog(this, "You solved the magic squares puzzle", "Solved!", JOptionPane.INFORMATION_MESSAGE);
+	    }
+	    else {
+		JOptionPane.showMessageDialog(this, "The solution is not valid", "The solution is not valid", JOptionPane.INFORMATION_MESSAGE);
+	    	highlightErrors(result);
+	    }
+	}
         else if (e.getSource() == exit) {
             dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
             System.exit(0);
         }
     }
+
+    public void keyTyped(KeyEvent e) {
+ 	if (highlightingOn) {
+		removeHighlighting();
+	}
+    }
+
+    public void keyPressed(KeyEvent e) {}
+
+    public void keyReleased(KeyEvent e) {}
 
     public void setLookAndFeel(String className) {
         try {
