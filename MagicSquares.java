@@ -22,15 +22,48 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
     private JMenuItem nimbus, system, metal, ocean;
     private JMenu validate;
     private JMenuItem validateSquares;
-    private Color foregroundColor, backgroundColor, highlightColor;
+    private Color foregroundColor = new Color(0, 0, 204, 255), backgroundColor = Color.WHITE, highlightColor = Color.RED;
     private JPanel panel;
     private JTextField[][] grid;
     private JFileChooser fileChooser;
     private File currentFile;
     private boolean highlightingOn = false;
 
+    public static class CharacterEncoding {
+        public static Map<String, String> dataToDisplayMap;
+        public static Map<String, String> editableFieldMap;
+
+	public static String dataToDisplay(String data) {
+            return dataToDisplayMap.get(data);
+        }
+
+        public static String displayToData(JTextField field) {
+             if (field.isEditable()) {
+                 return editableFieldMap.get(field.getText());
+             }
+             else {
+                 return field.getText();
+             }
+        }
+
+        static {
+            dataToDisplayMap = new HashMap<>();
+            editableFieldMap = new HashMap<>();
+            dataToDisplayMap.put("0", "");
+            editableFieldMap.put("", "0");
+            for (int i = 0; i < 9; i++) {
+                editableFieldMap.put(String.valueOf(i+1), String.valueOf((char) ('a' + i)));
+                dataToDisplayMap.put(String.valueOf(i+1), String.valueOf(i+1));
+                dataToDisplayMap.put(String.valueOf((char) ('a' + i)), String.valueOf(i+1));
+            } 
+        }
+    }
+
     public MagicSquares() {
         super("Magic Squares");
+    }
+
+    public void createAndShowGui() {
         setSize(900, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         bar = new JMenuBar();
@@ -133,7 +166,8 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
     private void refreshColors() {
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                grid[i][j].setForeground(foregroundColor);
+                if (!grid[i][j].isEditable())
+                    grid[i][j].setForeground(foregroundColor);
                 grid[i][j].setBackground(backgroundColor);
             }
         }
@@ -141,13 +175,12 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
 
     private void newFile() {
 	currentFile = null;
-	foregroundColor = Color.BLACK;
-	backgroundColor = Color.WHITE;
 	for (int i = 0; i < 9; i++) {
 	    for (int j = 0; j < 9; j++) {
 		grid[i][j].setText("");
-		grid[i][j].setForeground(foregroundColor);
-		grid[i][j].setBackground(backgroundColor);
+                 grid[i][j].setEditable(true);
+		grid[i][j].setForeground(Color.BLACK);
+		grid[i][j].setBackground(Color.WHITE);
 	    }
 	}
     }
@@ -158,10 +191,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
 	    String str = "";
 	    for (int i = 0; i < 9; i++) {
 	        for (int j = 0; j < 9; j++) {
-		    String s = grid[i][j].getText();
-		    if (s.equals(""))
-		        s = "0";
-		    str += s;
+		    str += CharacterEncoding.displayToData(grid[i][j]);                        
                 }
                 str += "\n";
             }
@@ -185,9 +215,9 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
         int returnVal = fileChooser.showOpenDialog(this);
         
         if (returnVal == JFileChooser.APPROVE_OPTION) {       
-            File file = fileChooser.getSelectedFile();
+            currentFile = fileChooser.getSelectedFile();
             try {
-                String text = new String(Files.readAllBytes(file.toPath()));
+                String text = new String(Files.readAllBytes(currentFile.toPath()));
 		load(text);
 	    } catch (IOException ex) {
 	    	System.err.println(ex);
@@ -213,11 +243,16 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
 
      private void load(String text) {
      	String[] lines = text.split("\n");
-        for (int i = 0; i < lines.length; i++) {
-     	    for (int j = 0; j < lines[i].length(); j++) {
-                char c = lines[i].charAt(j);
-                if (c >= '1' || c <= '9')
-                    grid[i][j].setText(String.valueOf(c));
+        for (int i = 0; i < 9; i++) {
+     	    for (int j = 0; j < 9; j++) {
+                	char c = lines[i].charAt(j);
+               	String s = String.valueOf(c);
+                	if (c >= '1' && c <= '9') {
+                    grid[i][j].setForeground(foregroundColor);
+                    grid[i][j].setEditable(false);
+                	}
+		grid[i][j].setText(CharacterEncoding.dataToDisplay(s));  
+		grid[i][j].setBackground(backgroundColor);
             }
         }
     }
@@ -238,54 +273,91 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
 	highlightingOn = false;
     }
 
-    private void highlightErrors(boolean[][] result) {
-	for (int row = 0; row < 9; row++) {
-	    if (!result[0][row]) {
-		for (int col = 0; col < 9; col++) {
-		    grid[row][col].setBorder(new LineBorder(highlightColor, 2));
-		}
-	    } 
-	}
+    private void highlightRow(int row) {
 	for (int col = 0; col < 9; col++) {
-	    if (!result[1][col]) {
-		for (int row = 0; row < 9; row++) {
-		    grid[row][col].setBorder(new LineBorder(highlightColor, 2));
-		}
+	    grid[row][col].setBorder(new LineBorder(highlightColor, 1));
+	}
+	highlightingOn = true;
+    }
+
+    private void highlightColumn(int col) {
+	for (int row = 0; row < 9; row++) {
+	    grid[row][col].setBorder(new LineBorder(highlightColor, 1));
+	}
+	highlightingOn = true;
+    }
+
+    private void highlightSubgrid(int x, int y) {
+	for (int i = 0; i < 3; i++) {
+	    for (int j = 0; j < 3; j++) {
+		grid[x+i][y+j].setBorder(new LineBorder(highlightColor, 1));
 	    }
 	}
 	highlightingOn = true;
     }
 
-    private boolean[][] validatePuzzle() {
-        boolean[][] result = new boolean[2][9];
-        boolean[] values = new boolean[10];
-	for (int row = 0; row < 9; row++) {
-	    Arrays.fill(values, false);
-	    for (int col = 0; col < 9; col++) {
-		int value = getValueAt(row, col);
+    private boolean validateSubgrid(int x, int y) {
+	boolean[] values = new boolean[10];
+	Arrays.fill(values, false);
+	for (int i = 0; i < 3; i++) {
+	    for (int j = 0; j < 3; j++) {
+	        int value = getValueAt(x+i, y+j);
 		values[value] = true;
 	    }
-	    result[0][row] = IntStream.range(1, 10).filter(i->values[i]).count() == 9;
 	}
+	boolean isValid = IntStream.range(1, 10).filter(i->values[i]).count() == 9;
+	if (!isValid)
+	    highlightSubgrid(x, y);
+	return isValid;
+    }	
+
+    private boolean validateRow(int row) {
+	boolean[] values = new boolean[10];
+	Arrays.fill(values, false);
 	for (int col = 0; col < 9; col++) {
-	    Arrays.fill(values, false);
-            for (int row = 0; row < 9; row++) {
-		int value = getValueAt(row, col);
-		values[value] = true;
-            }
-	    result[1][col] = IntStream.range(1, 10).filter(i->values[i]).count() == 9;
-        }
-	return result;
+	    int value = getValueAt(row, col);
+	    values[value] = true;
+	}
+	boolean isValid = IntStream.range(1, 10).filter(i->values[i]).count() == 9;
+	if (!isValid)
+	    highlightRow(row);
+	return isValid;
     }
 
-    private boolean isSolved(boolean[][] result) {
-	for (int i = 0; i < 2; i++) {
-	    for (int j = 0; j < 9; j++) {
-		if (!result[i][j])
-		    return false;
+    private boolean validateColumn(int col) {
+	boolean[] values = new boolean[10];
+	Arrays.fill(values, false);
+	for (int row = 0; row < 9; row++) {
+	    int value = getValueAt(row, col);
+	    values[value] = true;
+	}
+	boolean isValid = IntStream.range(1, 10).filter(i->values[i]).count() == 9;
+	if (!isValid)
+	    highlightColumn(col);
+	return isValid;
+    }
+
+    private boolean validatePuzzle() {
+        boolean isValid = true;
+	for (int row = 0; row < 9; row++) {
+            if (!validateRow(row)) {
+		isValid = false;
+            }
+	}
+	for (int col = 0; col < 9; col++) {
+	    boolean isColumnValid = validateColumn(col);
+	    if (!validateColumn(col)) {
+		isValid = false;
+            }
+        }
+	for (int x = 0; x < 9; x += 3) {
+	    for (int y = 0; y < 9; y += 3) {
+		if (!validateSubgrid(x, y)) {
+		    isValid = false;
+                }
 	    }
 	}
-	return true;
+	return isValid;
     }
 
     private void enableDisableMenuItems() {
@@ -379,13 +451,12 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
             setLookAndFeel(new MetalLookAndFeel());
         }
 	else if (e.getSource() == validateSquares) {
-	    boolean[][] result = validatePuzzle();
-	    if (isSolved(result)) {
+	    boolean isValid = validatePuzzle();
+	    if (isValid) {
 		JOptionPane.showMessageDialog(this, "You solved the magic squares puzzle", "Solved!", JOptionPane.INFORMATION_MESSAGE);
 	    }
 	    else {
 		JOptionPane.showMessageDialog(this, "The solution is not valid", "The solution is not valid", JOptionPane.INFORMATION_MESSAGE);
-	    	highlightErrors(result);
 	    }
 	}
         else if (e.getSource() == exit) {
@@ -442,6 +513,7 @@ public class MagicSquares extends JFrame implements MenuListener, ActionListener
     public static void main(String[] args) {
         MagicSquares.setLookAndFeel();
         MagicSquares frame = new MagicSquares();
+        frame.createAndShowGui();
         frame.setVisible(true);
     }
 }
