@@ -61,6 +61,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             JPanel panel = new JPanel();
             panel.setLayout(new BorderLayout());
             display = new JTextArea();
+	    display.setLineWrap(true);
             JScrollPane scrollPane = new JScrollPane(display);
             panel.add(scrollPane);
             dialog.add(panel);
@@ -275,10 +276,12 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         tools.add(gotoLine);
         tools.add(copyToClipboard);
         email = new JMenu("Email");
+	email.addMenuListener(this);
         sendEmail = new JMenuItem("Send email");
         sendEmail.addActionListener(this);
         email.add(sendEmail);
         compile = new JMenu("Compile");
+	compile.addMenuListener(this);
         compileJavaProgram = new JMenuItem("Compile Java program");
         compileJavaProgram.addActionListener(this);
         compileCProgram = new JMenuItem("Compile C program");
@@ -292,10 +295,12 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         compile.add(compileCPPProgram);
         compile.add(compileNASMProgram);
         link = new JMenu("Link");
+	link.addMenuListener(this);
         linkObjectCode = new JMenuItem("Link object code");
         linkObjectCode.addActionListener(this);
         link.add(linkObjectCode);
         run = new JMenu("Run");
+	run.addMenuListener(this);
         runJavaProgram = new JMenuItem("Run Java program");
         runJavaProgram.addActionListener(this);
         runPythonProgram = new JMenuItem("Run Python program");
@@ -650,7 +655,10 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             ProcessController process = new ProcessController(this, "Running Java program...", cmd);
             process.start();
         } else if (e.getSource() == runPythonProgram) {
+	    String args = JOptionPane.showInputDialog(this, "Args:", "Runtime arguments", JOptionPane.QUESTION_MESSAGE);
             String cmd = "python " + currentFile.getPath();
+	    if (args != null && args.length() > 0)
+	        cmd += " " + args;
             ProcessController process = new ProcessController(this, "Running Python program...", cmd);
             process.start();
         } else if (e.getSource() == runMachineCodeProgram) {
