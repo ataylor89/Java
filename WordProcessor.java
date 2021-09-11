@@ -382,14 +382,12 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     }
 
     private void saveToFile(File file) {
-        try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
             String text = textArea.getText();
             bufferedWriter.write(text);
-            bufferedWriter.close();
         } catch (IOException ex) {
             System.err.println(ex);
-        }
+        } 
     }
 
     private void saveToFileAs() {
@@ -674,7 +672,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     public static void main(String[] args) {
         WordProcessor.setLookAndFeel();
         WordProcessor wordProcessor = new WordProcessor();
-        if (args != null && args.length > 0) {
+        if (args.length > 0) {
             wordProcessor.setFilePath(args[0]);
         }
         wordProcessor.createAndShowGui();
