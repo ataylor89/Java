@@ -24,6 +24,7 @@ public class SimpleWordProcessor extends JFrame implements MenuListener, ActionL
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		bar = new JMenuBar();
 		file = new JMenu("File");
+		file.addMenuListener(this);
 		newFile = new JMenuItem("New");
 		newFile.addActionListener(this);
 		saveFile = new JMenuItem("Save");
@@ -49,7 +50,7 @@ public class SimpleWordProcessor extends JFrame implements MenuListener, ActionL
 		fileChooser = new JFileChooser();
 		setVisible(true);
 	}
-
+	
 	private void saveToFile(File f) {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(f))) {
 			writer.write(textArea.getText());
