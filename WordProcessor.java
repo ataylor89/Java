@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.stream.*;
 import javax.mail.*;
 import javax.mail.internet.*;
+import java.util.logging.*;
 
 public class WordProcessor extends JFrame implements MenuListener, ActionListener {
 
@@ -40,6 +41,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private File currentFile;
     private Color foregroundColor, backgroundColor;
     private int tabWidth;
+    private Logger logger;
 
     private class ProcessController extends Thread {
 
@@ -193,7 +195,9 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     public WordProcessor() {
         super("Word Processor");
-        tabWidth = 1;
+	  logger = Logger.getLogger("WordProcessor");
+	  logger.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
+	  logger.setLevel(Level.ALL);
     }
 
     public void setFilePath(String path) {
@@ -322,7 +326,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
         textArea = new JTextArea();
-        textArea.setTabSize(3);
+	   tabWidth = 2;
+        textArea.setTabSize(tabWidth);
         scrollPane = new JScrollPane(textArea);
         panel.add(scrollPane);
         add(panel);
@@ -572,6 +577,8 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         } else if (e.getSource() == tabSize) {
             Integer size = (Integer) JOptionPane.showInputDialog(this, "Select tab size", "Tab size", JOptionPane.QUESTION_MESSAGE, null, new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, tabSize);
             tabWidth = size.intValue();
+	    logger.log(Level.INFO, "The tab size is " + tabWidth);
+	    System.out.println("The tab size is " + tabWidth);
             textArea.setTabSize(tabWidth);
         } else if (e.getSource() == lineCount) {
             JOptionPane.showMessageDialog(this, "There are " + textArea.getLineCount() + " lines in the file");
