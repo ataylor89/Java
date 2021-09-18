@@ -7,7 +7,7 @@ import java.awt.*;
  import java.util.*;
  import java.applet.Applet;
 
- @SuppressWarnings("unchecked")
+ @SuppressWarnings(value={"unchecked", "deprecation"})
  public class GridBagEx1 extends Applet {
 
      protected void makebutton(String name,
