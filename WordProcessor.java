@@ -196,8 +196,15 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     public WordProcessor() {
         super("Word Processor");
 	  logger = Logger.getLogger("WordProcessor");
-	  logger.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
 	  logger.setLevel(Level.ALL);
+	  logger.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
+	  try {
+		logger.addHandler(new FileHandler("WordProcessor.log", true));
+		logger.log(Level.INFO, "Set up file logging");
+	  } catch (IOException e) {
+		System.err.println(e);
+		logger.log(Level.INFO, e.toString());
+	  }
     }
 
     public void setFilePath(String path) {
