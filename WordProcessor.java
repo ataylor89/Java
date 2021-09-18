@@ -451,11 +451,15 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
             message.setSubject(subject);
             message.setText(body);
             Transport.send(message);
+	    logger.log(Level.INFO, "Sent email message");
+	    logger.log(Level.INFO, message.getContent().toString());
         } catch (AddressException e) {
             System.err.println(e);
         } catch (MessagingException e) {
             System.err.println(e);
-        }
+        } catch (IOException e) {
+	    System.err.println(e);
+	}
     }
 
     private String getFilenameWithoutExtension() {
@@ -478,7 +482,6 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
 
     private void enableDisableMenuItems() {
         save.setEnabled(currentFile != null);
-        sendEmail.setEnabled(currentFile != null);
         compileJavaProgram.setEnabled(currentFile != null);
         compileCProgram.setEnabled(currentFile != null);
         compileCPPProgram.setEnabled(currentFile != null);
