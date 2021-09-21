@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -19,33 +20,24 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	private final Color gray = new Color(204, 204, 204, 255);
 	private final Color blue = new Color(0, 0, 204, 255);
 
-	private class ProcessController extends Thread {
+	private class Compiler extends Thread {
 		
-		private JDialog dialog;
+		private String program;
 		private JTextArea display;
-		private String title;
-		private String cmd;
 
-		public ProcessController(JFrame frame, String title, String cmd) {
-			dialog = new JDialog(frame, title);
-			dialog.setSize(700, 500);
-			JPanel panel = new JPanel();
-			panel.setLayout(new BorderLayout());
-			display = new JTextArea();
-			JScrollPane sp = new JScrollPane(display);
-			panel.add(sp);
-			dialog.add(panel);
-			dialog.setVisible(true);
+		public Compiler(String program, JTextArea display) {
+			this.program = program;
+			this.display = display;
 		}
 
 		@Override
 		public void run() {
 			try {
-				Process process = Runtime.getRuntime().exec(cmd);
+				Process process = Runtime.getRuntime().exec(program);
 				BufferedReader inputStream = new BufferedReader(new InputStreamReader(process.getInputStream()));
 				BufferedReader errorStream = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 	
-				while (dialog.isShowing() && process.isAlive()) {
+				while (process.isAlive()) {
 					inputStream.lines().forEach(line -> display.append(line + "\n"));
 					errorStream.lines().forEach(line -> display.append("Error: " + line + "\n"));
 				}
@@ -175,7 +167,25 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 
 	public void keyTyped(KeyEvent e) {}
 
-	public void keyPressed(KeyEvent e) {}
+	public void keyPressed(KeyEvent e) {
+		if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+			JScrollPane scrollPane = (JScrollPane) tabbedPane.getSelectedComponent();
+			JTextArea textArea = (JTextArea) scrollPane.getViewport().getView();
+			int offset = textArea.getCaretPosition();
+			try { 
+				int lineNumber = textArea.getLineOfOffset(offset);
+				int startIndex = textArea.getLineStartOffset(lineNumber);
+				int endIndex = textArea.getLineEndOffset(lineNumber);
+				String text = textArea.getText();
+				String program = text.substring(startIndex+2, endIndex);
+				System.out.println(program);
+				Compiler compiler = new Compiler(program, textArea);
+				compiler.start();
+			} catch (BadLocationException ex) {
+				System.err.println(ex);
+			}
+		}	
+	} 
 
 	public void keyReleased(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_ENTER) {
