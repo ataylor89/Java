@@ -3,6 +3,8 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.*;
+import java.util.stream.*;
 
 public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	
@@ -19,19 +21,64 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	private final Color teal = new Color(0, 153, 153, 255);
 	private final Color gray = new Color(204, 204, 204, 255);
 	private final Color blue = new Color(0, 0, 204, 255);
+	private Interpreter interpreter;
 
-	private class Compiler extends Thread {
-		
-		private String program;
-		private JTextArea display;
+	private class SeaShellTab extends JTextArea {
+		private String title;
+		private File currentDirectory;
 
-		public Compiler(String program, JTextArea display) {
-			this.program = program;
-			this.display = display;
+		public SeaShellTab(String title) {
+			this.title = title;
+			currentDirectory = new File(System.getProperty("user.home"));
 		}
 
-		@Override
-		public void run() {
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public String getTitle() {
+			return title;
+		}
+
+		public void setCurrentDirectory(File currentDirectory) {
+			this.currentDirectory = currentDirectory;
+		}
+
+		public File getCurrentDirectory() {
+			return currentDirectory;
+		}
+	}
+
+	private class Interpreter {
+		
+		private Map<String, Integer> tokens;
+		private final int LS = 1;
+		private final int CD = 2;
+		private final int ECHO = 3;
+		private final int COMPUTE = 4;
+		private final int JAVAC = 5;
+		private final int JAVA = 6;
+		private final int PYTHON = 7;
+		private final int GCC = 8;
+		private final int GPP = 9;
+		private final int NASM = 10;
+		private final int LD = 11;
+
+		public Interpreter() {
+			tokens = new HashMap<>();
+			tokens.put("ls", LS);
+			tokens.put("cd", CD);
+			tokens.put("echo", ECHO);
+			tokens.put("javac", JAVAC);
+			tokens.put("java", JAVA);
+			tokens.put("python", PYTHON);
+			tokens.put("gcc", GCC);
+			tokens.put("g++", GPP);
+			tokens.put("nasm", NASM);
+			tokens.put("ld", LD); 
+		}
+
+		private void startProcess(String program, SeaShellTab display) {
 			try {
 				Process process = Runtime.getRuntime().exec(program);
 				BufferedReader inputStream = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -45,10 +92,45 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 				System.err.println(e);
 			}
 		}
+
+		public void interpret(String program, SeaShellTab display) {
+			File currentDirectory = display.getCurrentDirectory();
+			String[] tokenarr = program.split(" ");
+			if (tokenarr.length == 0)
+				return;
+			String firstToken = tokenarr[0];
+			int tokenId = tokens.containsKey(firstToken) ? tokens.get(firstToken) : -1;
+			switch (tokenId) {
+				case LS:
+					String[] files = currentDirectory.list();
+					if (files.length > 0) {
+						display.append("\n");
+						Stream.of(files).forEach(name -> display.append(name + " "));
+					}
+					break;
+				case CD:
+					currentDirectory = new File(currentDirectory, tokenarr[1]);
+					display.setCurrentDirectory(currentDirectory);
+					break;
+				case ECHO:
+					String msg = program.substring(5);
+					display.append("\n" + msg);
+					break;
+				case COMPUTE:
+				case JAVAC:
+				case JAVA:
+				case PYTHON:
+				case GCC:
+				case GPP:
+				case NASM:
+				case LD:	
+			}
+		}
 	}
 
 	public SeaShell() {
 		super("SeaShell");
+		interpreter = new Interpreter();
 	}
 
 	public void createAndShowGui() {
@@ -170,17 +252,15 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	public void keyPressed(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 			JScrollPane scrollPane = (JScrollPane) tabbedPane.getSelectedComponent();
-			JTextArea textArea = (JTextArea) scrollPane.getViewport().getView();
-			int offset = textArea.getCaretPosition();
+			SeaShellTab seaShellTab = (SeaShellTab) scrollPane.getViewport().getView();
+			int offset = seaShellTab.getCaretPosition();
 			try { 
-				int lineNumber = textArea.getLineOfOffset(offset);
-				int startIndex = textArea.getLineStartOffset(lineNumber);
-				int endIndex = textArea.getLineEndOffset(lineNumber);
-				String text = textArea.getText();
+				int lineNumber = seaShellTab.getLineOfOffset(offset);
+				int startIndex = seaShellTab.getLineStartOffset(lineNumber);
+				int endIndex = seaShellTab.getLineEndOffset(lineNumber);
+				String text = seaShellTab.getText();
 				String program = text.substring(startIndex+2, endIndex);
-				System.out.println(program);
-				Compiler compiler = new Compiler(program, textArea);
-				compiler.start();
+				interpreter.interpret(program, seaShellTab);
 			} catch (BadLocationException ex) {
 				System.err.println(ex);
 			}
@@ -189,19 +269,19 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 
 	public void keyReleased(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-			JScrollPane sp = (JScrollPane) tabbedPane.getSelectedComponent();
-			JTextArea ta = (JTextArea) sp.getViewport().getView();
-			ta.append("& ");
-		}	
+			JScrollPane scrollPane = (JScrollPane) tabbedPane.getSelectedComponent();
+			SeaShellTab seaShellTab = (SeaShellTab) scrollPane.getViewport().getView();
+			seaShellTab.append("& ");
+		}
 	}
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == newTab) {
 			String title = JOptionPane.showInputDialog(this, "Title:", "New tab", JOptionPane.QUESTION_MESSAGE);
-			JTextArea textArea = new JTextArea();
-			textArea.append("& ");
-			textArea.addKeyListener(this);
-			JScrollPane scrollPane = new JScrollPane(textArea);
+			SeaShellTab seaShellTab = new SeaShellTab(title);
+			seaShellTab.append("& ");
+			seaShellTab.addKeyListener(this);
+			JScrollPane scrollPane = new JScrollPane(seaShellTab);
 			tabbedPane.addTab(title, scrollPane);
 		} else if (e.getSource() == closeTab) {
 			int index = tabbedPane.getSelectedIndex();
