@@ -371,7 +371,16 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 		}				
 	}
 
+	public static void setLookAndFeel() {
+		try {
+			UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			System.err.println(e);
+		}
+	}
+
 	public static void main(String[] args) {
+		SeaShell.setLookAndFeel();
 		SeaShell seaShell = new SeaShell();
 		seaShell.createAndShowGui();
 	}	

@@ -44,7 +44,11 @@ public class Git {
 		Git git = new Git();
 		System.out.println("git status");
 		git.status();
-		System.out.println("git add Git.java");
-		git.add("Git.java");
+		// System.out.println("git add Git.java");
+		// git.add("Git.java");
+		// System.out.println("git commit -m \"Adding code to Git.java\"");
+		// git.commit("Adding code to Git.java");
+		// System.out.println("git push -u origin main");
+		// git.push();
 	}
 }
