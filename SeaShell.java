@@ -99,8 +99,8 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 					isQuoted = !isQuoted;
 				}
 			}
-			System.out.print("Tokens: ");
-			tokens.stream().forEach(s -> System.out.print(s + " "));
+			String msg = "Tokens: " + tokens.stream().collect(Collectors.joining(" ")) + "\n";
+			logger.log(Level.INFO, msg);
 			return tokens.stream().toArray(String[]::new);
 		}
 
