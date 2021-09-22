@@ -5,6 +5,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import java.util.stream.*;
+import java.util.logging.*;
 
 public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	
@@ -22,6 +23,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	private final Color gray = new Color(204, 204, 204, 255);
 	private final Color blue = new Color(0, 0, 204, 255);
 	private Interpreter interpreter;
+	private Logger logger;
 
 	private class SeaShellTab extends JTextArea {
 		private String title;
@@ -132,6 +134,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 
 		@Override
 		public void run() {
+			logger.log(Level.INFO, "Command line program: " + program);
 			try {
 				Process process = Runtime.getRuntime().exec(program);
 				BufferedReader inputStream = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -139,7 +142,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 				display.setEnabled(false);
 				while (process.isAlive()) {
 					inputStream.lines().forEach(line -> display.append(line + "\n"));
-					errorStream.lines().forEach(line -> display.append("Error: " + line + "\n"));
+					errorStream.lines().forEach(line -> display.append(line + "\n"));
 				}
 				display.append("& ");
 				display.setEnabled(true);
@@ -152,6 +155,20 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	public SeaShell() {
 		super("SeaShell");
 		interpreter = new Interpreter();
+		initLogger();
+	}
+
+	private void initLogger() {
+		logger = Logger.getLogger("SeaShell");
+		logger.setLevel(Level.ALL);
+		logger.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
+		try {
+			logger.addHandler(new FileHandler("SeaShell.log", true));
+			logger.log(Level.INFO, "Set up file logging");
+		} catch (IOException e) {
+			System.err.println(e);
+			logger.log(Level.INFO, e.toString());
+		}
 	}
 
 	public void createAndShowGui() {
