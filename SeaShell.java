@@ -81,9 +81,32 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 			tokens.put("git", GIT);
 		}
 
+		private String[] tokenize(String program) {
+			java.util.List<String> tokens = new java.util.ArrayList<>();
+			boolean isQuoted = false;
+			int position = 0;
+			for (int i = 0; i < program.length(); i++) {
+				if (i > 0 && i == program.length() - 1) {
+					String token = program.substring(position, i);
+					tokens.add(token);
+				}
+				else if (!isQuoted && program.charAt(i) == ' ') {
+					String token = program.substring(position, i);
+					tokens.add(token);
+					position = i + 1;
+				}
+				else if (program.charAt(i) == '\"') {
+					isQuoted = !isQuoted;
+				}
+			}
+			System.out.print("Tokens: ");
+			tokens.stream().forEach(s -> System.out.print(s + " "));
+			return tokens.stream().toArray(String[]::new);
+		}
+
 		public void interpret(String program, SeaShellTab display) {
 			File currentDirectory = display.getCurrentDirectory();
-			String[] tokenarr = program.trim().split(" ");
+			String[] tokenarr = tokenize(program);
 			if (tokenarr.length == 0)
 				return;
 			String firstToken = tokenarr[0];
@@ -114,7 +137,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 				case NASM:
 				case LD:
 				case GIT:
-					CommandLineProgram process = new CommandLineProgram(program, display);
+					CommandLineProgram process = new CommandLineProgram(tokenarr, display);
 					process.start();
 					break;		
 				default:
@@ -124,25 +147,25 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	}
 
 	private class CommandLineProgram extends Thread {
-		private String program;
+		private String[] tokens;
 		private SeaShellTab display;		
 
-		public CommandLineProgram(String program, SeaShellTab display) {
-			this.program = program;
+		public CommandLineProgram(String[] tokens, SeaShellTab display) {
+			this.tokens = tokens;
 			this.display = display;
 		}
-
+	
 		@Override
-		public void run() {
-			logger.log(Level.INFO, "Command line program: " + program);
+		public void run() {		
+			ProcessBuilder pb = new ProcessBuilder(tokens);
+			pb.directory(display.getCurrentDirectory());
+			pb.redirectErrorStream(true);
 			try {
-				Process process = Runtime.getRuntime().exec(program);
+				Process process = pb.start();
 				BufferedReader inputStream = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				BufferedReader errorStream = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 				display.setEnabled(false);
 				while (process.isAlive()) {
 					inputStream.lines().forEach(line -> display.append(line + "\n"));
-					errorStream.lines().forEach(line -> display.append(line + "\n"));
 				}
 				display.append("& ");
 				display.setEnabled(true);
