@@ -49,8 +49,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 		}
 	}
 
-	private class Interpreter {
-		
+	private class Interpreter {		
 		private Map<String, Integer> tokens;
 		private final int LS = 1;
 		private final int CD = 2;
@@ -78,24 +77,9 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 			tokens.put("ld", LD); 
 		}
 
-		private void startProcess(String program, SeaShellTab display) {
-			try {
-				Process process = Runtime.getRuntime().exec(program);
-				BufferedReader inputStream = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				BufferedReader errorStream = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-	
-				while (process.isAlive()) {
-					inputStream.lines().forEach(line -> display.append(line + "\n"));
-					errorStream.lines().forEach(line -> display.append("Error: " + line + "\n"));
-				}
-			} catch (IOException e) {
-				System.err.println(e);
-			}
-		}
-
 		public void interpret(String program, SeaShellTab display) {
 			File currentDirectory = display.getCurrentDirectory();
-			String[] tokenarr = program.split(" ");
+			String[] tokenarr = program.trim().split(" ");
 			if (tokenarr.length == 0)
 				return;
 			String firstToken = tokenarr[0];
@@ -104,17 +88,18 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 				case LS:
 					String[] files = currentDirectory.list();
 					if (files.length > 0) {
-						display.append("\n");
 						Stream.of(files).forEach(name -> display.append(name + " "));
+						display.append("\n& ");
 					}
 					break;
 				case CD:
 					currentDirectory = new File(currentDirectory, tokenarr[1]);
 					display.setCurrentDirectory(currentDirectory);
+					display.append("& ");
 					break;
 				case ECHO:
 					String msg = program.substring(5);
-					display.append("\n" + msg);
+					display.append(msg + "& ");
 					break;
 				case COMPUTE:
 				case JAVAC:
@@ -123,7 +108,40 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 				case GCC:
 				case GPP:
 				case NASM:
-				case LD:	
+				case LD:
+					CommandLineProgram process = new CommandLineProgram(program, display);
+					process.start();
+					break;
+				default:
+					display.append(program + "& ");
+			}
+		}
+	}
+
+	private class CommandLineProgram extends Thread {
+		private String program;
+		private SeaShellTab display;		
+
+		public CommandLineProgram(String program, SeaShellTab display) {
+			this.program = program;
+			this.display = display;
+		}
+
+		@Override
+		public void run() {
+			try {
+				Process process = Runtime.getRuntime().exec(program);
+				BufferedReader inputStream = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				BufferedReader errorStream = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+				display.setEnabled(false);
+				while (process.isAlive()) {
+					inputStream.lines().forEach(line -> display.append(line + "\n"));
+					errorStream.lines().forEach(line -> display.append("Error: " + line + "\n"));
+				}
+				display.append("& ");
+				display.setEnabled(true);
+			} catch (IOException e) {
+				System.err.println(e);
 			}
 		}
 	}
@@ -249,13 +267,15 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 
 	public void keyTyped(KeyEvent e) {}
 
-	public void keyPressed(KeyEvent e) {
+	public void keyPressed(KeyEvent e) {}
+
+	public void keyReleased(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 			JScrollPane scrollPane = (JScrollPane) tabbedPane.getSelectedComponent();
 			SeaShellTab seaShellTab = (SeaShellTab) scrollPane.getViewport().getView();
 			int offset = seaShellTab.getCaretPosition();
 			try { 
-				int lineNumber = seaShellTab.getLineOfOffset(offset);
+				int lineNumber = seaShellTab.getLineOfOffset(offset) - 1;
 				int startIndex = seaShellTab.getLineStartOffset(lineNumber);
 				int endIndex = seaShellTab.getLineEndOffset(lineNumber);
 				String text = seaShellTab.getText();
@@ -266,14 +286,6 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 			}
 		}	
 	} 
-
-	public void keyReleased(KeyEvent e) {
-		if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-			JScrollPane scrollPane = (JScrollPane) tabbedPane.getSelectedComponent();
-			SeaShellTab seaShellTab = (SeaShellTab) scrollPane.getViewport().getView();
-			seaShellTab.append("& ");
-		}
-	}
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == newTab) {
