@@ -62,6 +62,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 		private final int GPP = 9;
 		private final int NASM = 10;
 		private final int LD = 11;
+		private final int GIT = 12;
 
 		public Interpreter() {
 			tokens = new HashMap<>();
@@ -75,6 +76,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 			tokens.put("g++", GPP);
 			tokens.put("nasm", NASM);
 			tokens.put("ld", LD); 
+			tokens.put("git", GIT);
 		}
 
 		public void interpret(String program, SeaShellTab display) {
@@ -109,9 +111,10 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 				case GPP:
 				case NASM:
 				case LD:
+				case GIT:
 					CommandLineProgram process = new CommandLineProgram(program, display);
 					process.start();
-					break;
+					break;		
 				default:
 					display.append(program + "& ");
 			}
