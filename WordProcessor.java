@@ -40,12 +40,12 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JFileChooser fileChooser;
     private File currentFile;
     private Color foregroundColor, backgroundColor;
-    private int tabWidth;
-    private Logger logger;
     private final Color purple = new Color(153, 0, 153, 255);
     private final Color teal = new Color(0, 153, 153, 255);
     private final Color blue = new Color(0, 0, 204, 255);
     private final Color gray = new Color(204, 204, 204, 255);
+    private int tabWidth;
+    private Logger logger;
 
     private class ProcessController extends Thread {
 
