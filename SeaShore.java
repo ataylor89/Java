@@ -18,6 +18,7 @@ public class SeaShore extends Application {
 	
 	private WebView browser;
 	private WebEngine engine;
+	private String home = "https://docs.oracle.com/javase/8/docs/api/";
 
 	public SeaShore() {
 		browser = new WebView();
@@ -41,6 +42,9 @@ public class SeaShore extends Application {
 			}	
 		});
 		MenuItem openHomePage = new MenuItem("Home");
+		openHomePage.setOnAction(e -> {
+			engine.load(home);
+		});
 		MenuItem openSearchPage = new MenuItem("Search");
 		MenuItem exit = new MenuItem("Exit");
 		exit.setOnAction(e -> stage.close());
@@ -49,7 +53,7 @@ public class SeaShore extends Application {
 		root.setTop(menuBar);
 		root.setCenter(browser);
 		Scene scene = new Scene(root, 1200, 1200);
-		engine.load("https://docs.oracle.com/javase/8/docs/api/");
+		engine.load(home);
 		stage.setScene(scene);
 		stage.setOnCloseRequest(e -> {
 			Platform.exit();
