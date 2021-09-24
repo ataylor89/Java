@@ -15,6 +15,8 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.Tab;
 import java.util.Optional;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 public class WebBrowser extends Application {
 	
@@ -25,20 +27,20 @@ public class WebBrowser extends Application {
 	private MenuItem openURL, openFile, openHomePage, openSearchPage, exit;
 	private String home = "https://docs.oracle.com/javase/8/docs/api/";
 
-	public WebBrowser() {
+	public WebBrowser() {}
 	
-	}
-	
-	private void createTab(String title, String url) {
+	private void createTab(String url) {
 		WebView browser = new WebView();
+		browser.getEngine().load(url);	
+		String title = "Tab";
+		try {
+			title = new URL(url).getHost();
+		} catch (MalformedURLException e) {
+			System.err.println(e);
+		}
 		Tab tab = new Tab(title, browser);
 		tabPane.getTabs().add(tab);
-		browser.getEngine().load(url);	
 		tabPane.getSelectionModel().select(tab);
-	}
-
-	private void createTab(String url) {
-		createTab("Tab", url);
 	}
 
 	@Override
@@ -58,7 +60,7 @@ public class WebBrowser extends Application {
 		});
 		openHomePage = new MenuItem("Home");
 		openHomePage.setOnAction(e -> {
-			createTab("Home Page", home);
+			createTab(home);
 		});
 		openSearchPage = new MenuItem("Search");
 		exit = new MenuItem("Exit");
@@ -67,7 +69,7 @@ public class WebBrowser extends Application {
 		menuBar.getMenus().add(webMenu);
 		root.setTop(menuBar);
 		tabPane = new TabPane();
-		createTab("Home Page", home);
+		createTab(home);
 		root.setCenter(tabPane);
 		Scene scene = new Scene(root, 1200, 1200);
 		stage.setScene(scene);
