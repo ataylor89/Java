@@ -21,7 +21,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private JMenu file;
     private JMenuItem newFile, save, saveAs, open, downloadWebPage, exit;
     private JMenu colors;
-    private JMenuItem fgcolor, bgcolor, whiteblack, whitegray, grayblue, tealwhite, purplewhite;
+    private JMenuItem fgcolor, bgcolor, whiteblack, whitegray, grayblue, tealwhite, purplewhite, blackwhite, graywhite, bluegray, whiteteal, whitepurple;
     private JMenu theme;
     private JMenuItem nimbus, system, metal, ocean;
     private JMenu tools;
@@ -42,6 +42,10 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     private Color foregroundColor, backgroundColor;
     private int tabWidth;
     private Logger logger;
+    private final Color purple = new Color(153, 0, 153, 255);
+    private final Color teal = new Color(0, 153, 153, 255);
+    private final Color blue = new Color(0, 0, 204, 255);
+    private final Color gray = new Color(204, 204, 204, 255);
 
     private class ProcessController extends Thread {
 
@@ -240,18 +244,33 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
         fgcolor.addActionListener(this);
         bgcolor = new JMenuItem("Set background color");
         bgcolor.addActionListener(this);
-        whiteblack = new JMenuItem("White black");
-        whiteblack.addActionListener(this);
-        whitegray = new JMenuItem("White gray");
-        whitegray.addActionListener(this);
-        grayblue = new JMenuItem("Gray blue");
-        grayblue.addActionListener(this);
-        tealwhite = new JMenuItem("Teal white");
-        tealwhite.addActionListener(this);
-        purplewhite = new JMenuItem("Purple white");
-        purplewhite.addActionListener(this);
+        blackwhite = new JMenuItem("Black white");
+        blackwhite.addActionListener(this);
+        graywhite = new JMenuItem("Gray white");
+        graywhite.addActionListener(this);
+        bluegray = new JMenuItem("Blue gray");
+        bluegray.addActionListener(this);
+        whiteteal = new JMenuItem("White teal");
+        whiteteal.addActionListener(this);
+        whitepurple = new JMenuItem("White purple");
+        whitepurple.addActionListener(this);
+	  whiteblack = new JMenuItem("White black");
+	  whiteblack.addActionListener(this);
+	  whitegray = new JMenuItem("White gray");
+	  whitegray.addActionListener(this);
+	  grayblue = new JMenuItem("Gray blue");
+	  grayblue.addActionListener(this);
+	  tealwhite = new JMenuItem("Teal white");
+	  tealwhite.addActionListener(this);
+	  purplewhite = new JMenuItem("Purple white");
+	  purplewhite.addActionListener(this);
         colors.add(fgcolor);
         colors.add(bgcolor);
+	  colors.add(blackwhite);
+	  colors.add(graywhite);
+	  colors.add(bluegray);
+	  colors.add(whiteteal);
+	  colors.add(whitepurple);
         colors.add(whiteblack);
         colors.add(whitegray);
         colors.add(grayblue);
@@ -505,7 +524,7 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
     public void menuCanceled(MenuEvent e) {
     }
 
-    private void refreshColors() {
+    private void setColors(Color foregroundColor, Color backgroundColor) {
         textArea.setForeground(foregroundColor);
         textArea.setBackground(backgroundColor);
     }
@@ -554,27 +573,27 @@ public class WordProcessor extends JFrame implements MenuListener, ActionListene
                 backgroundColor = color;
             }
             textArea.setBackground(backgroundColor);
+        } else if (e.getSource() == blackwhite) {
+            setColors(Color.BLACK, Color.WHITE);
+        } else if (e.getSource() == graywhite) {
+            setColors(Color.LIGHT_GRAY, Color.WHITE);
+        } else if (e.getSource() == bluegray) {
+            setColors(blue, gray);
+        } else if (e.getSource() == whiteteal) {
+            setColors(Color.WHITE, teal);
+        } else if (e.getSource() == whitepurple) {
+            setColors(Color.WHITE, purple);
         } else if (e.getSource() == whiteblack) {
-            foregroundColor = Color.BLACK;
-            backgroundColor = Color.WHITE;
-            refreshColors();
-        } else if (e.getSource() == whitegray) {
-            foregroundColor = Color.LIGHT_GRAY;
-            backgroundColor = Color.WHITE;
-            refreshColors();
-        } else if (e.getSource() == grayblue) {
-            foregroundColor = new Color(0, 0, 204, 255);
-            backgroundColor = new Color(204, 204, 204, 255);
-            refreshColors();
-        } else if (e.getSource() == tealwhite) {
-            foregroundColor = Color.WHITE;
-            backgroundColor = new Color(0, 153, 153, 255);
-            refreshColors();
-        } else if (e.getSource() == purplewhite) {
-            foregroundColor = Color.WHITE;
-            backgroundColor = new Color(153, 0, 153, 255);
-            refreshColors();
-        } else if (e.getSource() == nimbus) {
+		 setColors(Color.WHITE, Color.BLACK);
+	  } else if (e.getSource() == whitegray) {
+		 setColors(Color.WHITE, Color.LIGHT_GRAY);
+	  } else if (e.getSource() == grayblue) {
+		 setColors(gray, blue);
+	  } else if (e.getSource() == tealwhite) {
+		 setColors(teal, Color.WHITE);
+	  } else if (e.getSource() == purplewhite) {
+		 setColors(purple, Color.WHITE);
+	  } else if (e.getSource() == nimbus) {
             setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } else if (e.getSource() == system) {
             setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
