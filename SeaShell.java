@@ -13,7 +13,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	private JMenu file;
 	private JMenuItem newTab, closeTab, saveFile, openFile, exit;
 	private JMenu colors;
-	private JMenuItem purplewhite, tealwhite, grayblue, bluegray, whitepurple, whiteteal, setForegroundColor, setBackgroundColor;
+	private JMenuItem setForegroundColor, setBackgroundColor, blackwhite, graywhite, grayblue, tealwhite, purplewhite, whiteblack, whitegray, bluegray, whiteteal, whitepurple;
 	private JPanel panel;
 	private JTabbedPane tabbedPane;
 	private JFileChooser fileChooser;
@@ -217,28 +217,40 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 		colors = new JMenu("Colors");
 		setForegroundColor = new JMenuItem("Set foreground color");
 		setForegroundColor.addActionListener(this);
-		colors.add(setForegroundColor);
 		setBackgroundColor = new JMenuItem("Set background color");
 		setBackgroundColor.addActionListener(this);
-		colors.add(setBackgroundColor);
-		purplewhite = new JMenuItem("Purple white");
-		purplewhite.addActionListener(this);
-		colors.add(purplewhite);
-		tealwhite = new JMenuItem("Teal white");
-		tealwhite.addActionListener(this);
-		colors.add(tealwhite);
-		grayblue = new JMenuItem("Gray blue");
-		grayblue.addActionListener(this);
-		colors.add(grayblue);
-		whitepurple = new JMenuItem("White purple");
-		whitepurple.addActionListener(this);
-		colors.add(whitepurple);
-		whiteteal = new JMenuItem("White teal");
-		whiteteal.addActionListener(this);
-		colors.add(whiteteal);
+		blackwhite = new JMenuItem("Black white");
+		blackwhite.addActionListener(this);
+		graywhite = new JMenuItem("Gray white");
+		graywhite.addActionListener(this);
 		bluegray = new JMenuItem("Blue gray");
 		bluegray.addActionListener(this);
+		whiteteal = new JMenuItem("White teal");
+		whiteteal.addActionListener(this);
+		whitepurple = new JMenuItem("White purple");
+		whitepurple.addActionListener(this);
+		whiteblack = new JMenuItem("White black");
+		whiteblack.addActionListener(this);
+		whitegray = new JMenuItem("White gray");
+		whitegray.addActionListener(this);
+		grayblue = new JMenuItem("Gray blue");
+		grayblue.addActionListener(this);
+		tealwhite = new JMenuItem("Teal white");
+		tealwhite.addActionListener(this);
+		purplewhite = new JMenuItem("Purple white");
+		purplewhite.addActionListener(this);
+		colors.add(setForegroundColor);
+		colors.add(setBackgroundColor);
+		colors.add(blackwhite);
+		colors.add(graywhite);
 		colors.add(bluegray);
+		colors.add(whiteteal);
+		colors.add(whitepurple);
+		colors.add(whiteblack);
+		colors.add(whitegray);
+		colors.add(grayblue);
+		colors.add(tealwhite);
+		colors.add(purplewhite);
 		menuBar.add(file);
 		menuBar.add(colors);
 		setJMenuBar(menuBar);
@@ -300,8 +312,8 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 	}
 
 	private void setColors(Color fgColor, Color bgColor) {
-		this.foregroundColor = fgColor;
-		this.backgroundColor = bgColor;
+		foregroundColor = fgColor;
+		backgroundColor = bgColor;
 		JScrollPane sp = (JScrollPane) tabbedPane.getSelectedComponent();
 		JTextArea ta = (JTextArea) sp.getViewport().getView();
 		ta.setForeground(foregroundColor);
@@ -352,22 +364,30 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 			Color color = JColorChooser.showDialog(this, "Select a foreground color", foregroundColor);
 			if (color != null) foregroundColor = color;
 			setForegroundColor(foregroundColor);
-		} else if (e.getSource() == backgroundColor) {
+		} else if (e.getSource() == setBackgroundColor) {
 			Color color = JColorChooser.showDialog(this, "Select a background color", backgroundColor);
 			if (color != null) backgroundColor = color;
 			setBackgroundColor(backgroundColor);
-		} else if (e.getSource() == purplewhite) {
-			setColors(Color.WHITE, purple);
-		} else if (e.getSource() == tealwhite) {
-			setColors(Color.WHITE, teal);
-		} else if (e.getSource() == grayblue) {
-			setColors(blue, gray);
-		} else if (e.getSource() == whitepurple) {
-			setColors(purple, Color.WHITE);
-		} else if (e.getSource() == whiteteal) {
-			setColors(teal, Color.WHITE);
+		} else if (e.getSource() == blackwhite) {
+			setColors(Color.BLACK, Color.WHITE);
+		} else if (e.getSource() == graywhite) {
+			setColors(Color.LIGHT_GRAY, Color.WHITE);
 		} else if (e.getSource() == bluegray) {
+			setColors(blue, gray);
+		} else if (e.getSource() == whiteteal) {
+			setColors(Color.WHITE, teal);
+		} else if (e.getSource() == whitepurple) {
+			setColors(Color.WHITE, purple);
+		} else if (e.getSource() == whiteblack) {
+			setColors(Color.WHITE, Color.BLACK);
+		} else if (e.getSource() == whitegray) {
+			setColors(Color.WHITE, Color.LIGHT_GRAY);
+		} else if (e.getSource() == grayblue) {
 			setColors(gray, blue);
+		} else if (e.getSource() == tealwhite) {
+			setColors(teal, Color.WHITE);
+		} else if (e.getSource() == purplewhite) {
+			setColors(purple, Color.WHITE);
 		}				
 	}
 
