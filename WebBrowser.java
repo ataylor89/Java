@@ -41,15 +41,14 @@ public class WebBrowser extends Application {
 	private void openURL(String url) {
 		WebView browser = new WebView();
 		browser.getEngine().load(url);	
-		String title = "Tab";
 		try {
-			title = new URL(url).getHost();
+			String title = new URL(url).getHost();
+			Tab tab = new Tab(title, browser);
+			tabPane.getTabs().add(tab);
+			tabPane.getSelectionModel().select(tab);
 		} catch (MalformedURLException e) {
 			System.err.println(e);
 		}
-		Tab tab = new Tab(title, browser);
-		tabPane.getTabs().add(tab);
-		tabPane.getSelectionModel().select(tab);
 	}
 
 	private void openHTMLFile(File file) {
