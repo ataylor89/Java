@@ -20,7 +20,8 @@ public class XorEncryption {
 		}
 		Path dataPath = Paths.get(args[0]);
 		Path cipherPath = Paths.get(args[1]);
-		try {
+		File outFile = new File(args[0] + ".enc");
+		try (PrintWriter out = new PrintWriter(new FileWriter(outFile, true))) {
 			String data = new String(Files.readAllBytes(dataPath));
 			String cipher = new String(Files.readAllBytes(cipherPath));
 			String encryptedData = crypt(data, cipher);
@@ -28,6 +29,7 @@ public class XorEncryption {
 			System.out.println("Data:\n" + data);
 			System.out.println("Encrypted data:\n" + encryptedData);
 			System.out.println("Decrypted data:\n" + decryptedData);
+			out.print(encryptedData);
 		} catch (IOException e) {
 			System.err.println(e);
 		}
