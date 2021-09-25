@@ -20,16 +20,22 @@ public class XorEncryption {
 		}
 		Path dataPath = Paths.get(args[0]);
 		Path cipherPath = Paths.get(args[1]);
-		File outFile = new File(args[0] + ".enc");
-		try (PrintWriter out = new PrintWriter(new FileWriter(outFile, true))) {
+		String outFilePath = args[0];
+		if (outFilePath.endsWith(".enc"))
+			outFilePath = outFilePath.substring(0, outFilePath.length() - 4) + ".dec";
+		else if (outFilePath.endsWith(".dec"))
+			outFilePath = outFilePath.substring(0, outFilePath.length() - 4) + ".enc";
+		else
+			outFilePath += ".enc";
+		File outFile = new File(outFilePath);
+		try (PrintWriter out = new PrintWriter(new FileOutputStream(outFile, false), true)) {
 			String data = new String(Files.readAllBytes(dataPath));
 			String cipher = new String(Files.readAllBytes(cipherPath));
-			String encryptedData = crypt(data, cipher);
-			String decryptedData = crypt(encryptedData, cipher);
-			System.out.println("Data:\n" + data);
-			System.out.println("Encrypted data:\n" + encryptedData);
-			System.out.println("Decrypted data:\n" + decryptedData);
-			out.print(encryptedData);
+			String datac = crypt(data, cipher);
+			out.write(datac);
+			System.out.println("Data file:" + dataPath);
+			System.out.println("Cipher file:" + cipherPath);
+			System.out.println("Output file:" + outFilePath);
 		} catch (IOException e) {
 			System.err.println(e);
 		}
