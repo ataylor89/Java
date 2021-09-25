@@ -14,28 +14,21 @@ public class XorEncryption {
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 2) {
-			System.out.println("Usage: java XorEncryption <dataFile> <cipherFile>");
+		if (args.length < 3) {
+			System.out.println("Usage: java XorEncryption <dataFile> <cipherFile> <outFile>");
 			return;
 		}
 		Path dataPath = Paths.get(args[0]);
 		Path cipherPath = Paths.get(args[1]);
-		String outFilePath = args[0];
-		if (outFilePath.endsWith(".enc"))
-			outFilePath = outFilePath.substring(0, outFilePath.length() - 4) + ".dec";
-		else if (outFilePath.endsWith(".dec"))
-			outFilePath = outFilePath.substring(0, outFilePath.length() - 4) + ".enc";
-		else
-			outFilePath += ".enc";
-		File outFile = new File(outFilePath);
+		File outFile = new File(args[2]);
 		try (PrintWriter out = new PrintWriter(new FileOutputStream(outFile, false), true)) {
 			String data = new String(Files.readAllBytes(dataPath));
 			String cipher = new String(Files.readAllBytes(cipherPath));
 			String datac = crypt(data, cipher);
 			out.write(datac);
-			System.out.println("Data file:" + dataPath);
-			System.out.println("Cipher file:" + cipherPath);
-			System.out.println("Output file:" + outFilePath);
+			System.out.println("Data file:" + args[0]);
+			System.out.println("Cipher file:" + args[1]);
+			System.out.println("Output file:" + args[2]);
 		} catch (IOException e) {
 			System.err.println(e);
 		}
