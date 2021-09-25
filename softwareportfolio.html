@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>Andrew's Software Portfolio</title>
+</head>
+<body>
+<h1>Software Portfolio</h1>
+<p>
+<b>Word Processor (Java)</b><br>
+Git: <a href="https://github.com/ataylor89/Java/blob/main/WordProcessor.java">https://github.com/ataylor89/Java/blob/main/WordProcessor.java</a><br>
+Description: A graphical word processor that has many color schemes, several look and feels, creates files, saves files, opens files, sends email, compiles source code, links object code, and runs program binaries.<br>
+Dependencies: <a href="https://github.com/javaee/javamail/releases/download/JAVAMAIL-1_6_2/javax.mail.jar">javax.mail.jar</a><br>
+Compile: javac -classpath javax.mail.jar WordProcessor.java<br>
+Run: java -classpath javax.mail.jar:. WordProcessor
+</p>
+<p>
+<b>Magic Squares (Java)</b><br>
+Git:  <a href="https://github.com/ataylor89/Java/blob/main/MagicSquares.java">https://github.com/ataylor89/Java/blob/main/MagicSquares.java</a><br>
+Description: Magic Squares is a game that lets you put the numbers one through nine in the squares of a 9x9 grid. You win the game when every row, column, and subgrid has the numbers one through nine.<br>
+Resources: <a href="https://raw.githubusercontent.com/ataylor89/Java/main/MagicSquaresPuzzle.txt">Sample puzzle</a><br>
+Compile: javac MagicSquares.java<br>
+Run: java MagicSquares
+</p>
+<p>
+<b>Mathematical Art (Python)</b><br>
+Git: <a href="https://github.com/ataylor89/Python/blob/main/mathart.py">https://github.com/ataylor89/Python/blob/main/mathart.py</a><br>
+Description: Math Art is a Python program that creates mathematical art. Math Art draws polygons and spirals constructed from polygons.<br>
+Run: python mathart.py <shape> <slength> <left|right> <x> <y>
+</p>
+<p>
+<b>Prime Number Finder (NASM)</b><br>
+Git: <a href="https://github.com/ataylor89/nasm/blob/main/primes.asm">https://github.com/ataylor89/nasm/blob/main/primes.asm</a><br>
+Description: Finds all prime numbers less than n.<br>
+Compile: nasm -fmacho64 primes.asm<br>  
+Link: ld -macosx_version_min 10.7 -lSystem primes.o -o primes<br>
+Run: ./primes
+</p> 
+<p>
+<b>IRC Client (C)</b><br>
+Git: <a href="https://github.com/ataylor89/C/blob/main/ircclient.c">https://github.com/ataylor89/C/blob/main/ircclient.c</a><br>
+Description: A multithreaded IRC client in C with a GTK4 GUI. A user can connect to a plaintext IRC server and send and receive chat messages.<br>
+Compile: gcc ircclient.c -o ircclient `pkg-config --cflags --libs gtk4`<br>
+Run: ./ircclient
+</p>
+</body>
+</html>
