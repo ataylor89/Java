@@ -57,16 +57,17 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 		private final int CD = 2;
 		private final int ECHO = 3;
 		private final int CAT = 4;
-		private final int COUNT = 5;
-		private final int COMPUTE = 6;
-		private final int JAVAC = 7;
-		private final int JAVA = 8;
-		private final int PYTHON = 9;
-		private final int GCC = 10;
-		private final int GPP = 11;
-		private final int NASM = 12;
-		private final int LD = 13;
-		private final int GIT = 14;
+		private final int CP = 5;
+		private final int COUNT = 6;
+		private final int COMPUTE = 7;
+		private final int JAVAC = 8;
+		private final int JAVA = 9;
+		private final int PYTHON = 10;
+		private final int GCC = 11;
+		private final int GPP = 12;
+		private final int NASM = 13;
+		private final int LD = 14;
+		private final int GIT = 15;
 
 		public Interpreter() {
 			tokens = new HashMap<>();
@@ -74,6 +75,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 			tokens.put("cd", CD);
 			tokens.put("echo", ECHO);		
 			tokens.put("cat", CAT);
+			tokens.put("cp", CP);
 			tokens.put("count", COUNT);
 			tokens.put("javac", JAVAC);
 			tokens.put("java", JAVA);
@@ -115,7 +117,6 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 				return;
 			String firstToken = tokenarr[0];
 			int tokenId = tokens.containsKey(firstToken) ? tokens.get(firstToken) : -1;
-			File file = null;
 			switch (tokenId) {
 				case LS:
 					String[] files = currentDirectory.list();
@@ -134,8 +135,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 					display.append(msg + "& ");
 					break;
 				case CAT:
-					file = new File(tokenarr[1]);
-					try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+					try (BufferedReader reader = new BufferedReader(new FileReader(tokenarr[1]))) {
 						String contents = reader.lines().collect(Collectors.joining("\n"));
 						display.append(contents);
 						display.append("\n& ");
@@ -144,8 +144,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 					}
 					break;
 				case COUNT:
-					file = new File(tokenarr[1]);
-					try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+					try (BufferedReader reader = new BufferedReader(new FileReader(tokenarr[1]))) {
 						String contents = reader.lines().collect(Collectors.joining("\n"));
 						int numChars = contents.length();
 						long numLines = contents.split("\n").length;
@@ -153,6 +152,18 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 						display.append("Number of lines: " + numLines + "\n");
 						display.append("& ");
 					} catch (IOException e) {	
+						System.err.println(e);
+					}
+					break;
+				case CP:
+					try (
+						BufferedReader reader = new BufferedReader(new FileReader(tokenarr[1]));
+						PrintWriter writer = new PrintWriter(new FileOutputStream(tokenarr[2], false), true)
+					) {
+						String contents = reader.lines().collect(Collectors.joining("\n"));
+						writer.write(contents);
+						display.append("& ");
+					} catch (IOException e) {
 						System.err.println(e);
 					}
 					break;
