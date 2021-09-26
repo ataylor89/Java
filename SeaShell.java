@@ -58,16 +58,18 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 		private final int ECHO = 3;
 		private final int CAT = 4;
 		private final int CP = 5;
-		private final int COUNT = 6;
-		private final int COMPUTE = 7;
-		private final int JAVAC = 8;
-		private final int JAVA = 9;
-		private final int PYTHON = 10;
-		private final int GCC = 11;
-		private final int GPP = 12;
-		private final int NASM = 13;
-		private final int LD = 14;
-		private final int GIT = 15;
+		private final int MKDIR = 6;
+		private final int COUNT = 7;
+		private final int COMPUTE = 8;
+		private final int JAVAC = 9;
+		private final int JAVA = 10;
+		private final int MVN = 11;
+		private final int PYTHON = 12;
+		private final int GCC = 13;
+		private final int GPP = 14;
+		private final int NASM = 15;
+		private final int LD = 16;
+		private final int GIT = 17;
 
 		public Interpreter() {
 			tokens = new HashMap<>();
@@ -76,9 +78,11 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 			tokens.put("echo", ECHO);		
 			tokens.put("cat", CAT);
 			tokens.put("cp", CP);
+			tokens.put("mkdir", MKDIR);
 			tokens.put("count", COUNT);
 			tokens.put("javac", JAVAC);
 			tokens.put("java", JAVA);
+			tokens.put("mvn", MVN);
 			tokens.put("python", PYTHON);
 			tokens.put("gcc", GCC);
 			tokens.put("g++", GPP);
@@ -110,6 +114,15 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 			return tokens.stream().toArray(String[]::new);
 		}
 
+		private File getFile(String path, File currentDirectory) {
+			if (path.startsWith("~"))
+				path = System.getProperty("user.home") + path.substring(1);
+			File file = new File(path);
+			if (!file.isAbsolute())
+				file = new File(currentDirectory, path);	
+			return file;
+		}
+
 		public void interpret(String program, SeaShellTab display) {
 			File currentDirectory = display.getCurrentDirectory();
 			String[] tokenarr = tokenize(program);
@@ -117,17 +130,23 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 				return;
 			String firstToken = tokenarr[0];
 			int tokenId = tokens.containsKey(firstToken) ? tokens.get(firstToken) : -1;
+			File file = null;
 			switch (tokenId) {
 				case LS:
-					String[] files = currentDirectory.list();
-					if (files.length > 0) {
-						Stream.of(files).forEach(name -> display.append(name + " "));
-						display.append("\n& ");
+					file = (tokenarr.length == 2) ? getFile(tokenarr[1], currentDirectory) : currentDirectory;
+					if (file.isDirectory()) {			
+						String[] files = file.list();
+						if (files.length > 0) {
+							Stream.of(files).forEach(name -> display.append(name + " "));
+							display.append("\n");
+						}
 					}
+					display.append("& ");
 					break;
 				case CD:
-					currentDirectory = new File(currentDirectory, tokenarr[1]);
-					display.setCurrentDirectory(currentDirectory);
+					file = getFile(tokenarr[1], currentDirectory);
+					if (file.isDirectory())
+						display.setCurrentDirectory(file);
 					display.append("& ");
 					break;
 				case ECHO:
@@ -135,42 +154,60 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 					display.append(msg + "& ");
 					break;
 				case CAT:
-					try (BufferedReader reader = new BufferedReader(new FileReader(tokenarr[1]))) {
-						String contents = reader.lines().collect(Collectors.joining("\n"));
-						display.append(contents);
-						display.append("\n& ");
-					} catch (IOException e) {	
-						System.err.println(e);
+					file = getFile(tokenarr[1], currentDirectory);
+					if (file.isFile()) {
+						try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+							String contents = reader.lines().collect(Collectors.joining("\n"));
+							display.append(contents);
+							display.append("\n");
+						} catch (IOException e) {	
+							System.err.println(e);
+						}
 					}
+					display.append("& ");
 					break;
 				case COUNT:
-					try (BufferedReader reader = new BufferedReader(new FileReader(tokenarr[1]))) {
-						String contents = reader.lines().collect(Collectors.joining("\n"));
-						int numChars = contents.length();
-						long numLines = contents.split("\n").length;
-						display.append("Number of characters: " + numChars + "\n");
-						display.append("Number of lines: " + numLines + "\n");
-						display.append("& ");
-					} catch (IOException e) {	
-						System.err.println(e);
+					file = getFile(tokenarr[1], currentDirectory);
+					if (file.isFile()) {
+						try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+							String contents = reader.lines().collect(Collectors.joining("\n"));
+							int numChars = contents.length();
+							long numLines = contents.split("\n").length;
+							display.append("Number of characters: " + numChars + "\n");
+							display.append("Number of lines: " + numLines + "\n");
+							display.append("& ");
+						} catch (IOException e) {	
+							System.err.println(e);
+						}
 					}
 					break;
 				case CP:
-					try (
-						BufferedReader reader = new BufferedReader(new FileReader(tokenarr[1]));
-						PrintWriter writer = new PrintWriter(new FileOutputStream(tokenarr[2], false), true)
-					) {
-						String contents = reader.lines().collect(Collectors.joining("\n"));
-						writer.write(contents);
-						display.append("& ");
-					} catch (IOException e) {
-						System.err.println(e);
+					File source = getFile(tokenarr[1], currentDirectory);
+					File dest = getFile(tokenarr[2], currentDirectory);
+					if (source.isFile()) {
+						try (
+							BufferedReader reader = new BufferedReader(new FileReader(source));
+							PrintWriter writer = new PrintWriter(new FileOutputStream(dest, false), true)
+						) {
+							String contents = reader.lines().collect(Collectors.joining("\n"));
+							writer.write(contents);
+						} catch (IOException e) {
+							System.err.println(e);
+						}
 					}
+					display.append("& ");
+					break;
+				case MKDIR:
+					file = getFile(tokenarr[1], currentDirectory);	
+					if (!file.exists())
+						file.mkdir();
+					display.append("& ");
 					break;
 				case COMPUTE:
 					break;
 				case JAVAC:
 				case JAVA:
+				case MVN:
 				case PYTHON:
 				case GCC:
 				case GPP:
