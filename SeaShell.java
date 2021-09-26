@@ -476,8 +476,15 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 		}
 	}
 
+	public static void setupKeyStrokes() {
+		InputMap im = (InputMap) UIManager.get("TextArea.focusInputMap");
+		im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), DefaultEditorKit.copyAction);
+		im.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.META_DOWN_MASK), DefaultEditorKit.pasteAction);
+	}
+
 	public static void main(String[] args) {
 		SeaShell.setLookAndFeel();
+		SeaShell.setupKeyStrokes();
 		SeaShell seaShell = new SeaShell();
 		seaShell.createAndShowGui();
 	}	
