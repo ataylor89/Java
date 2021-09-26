@@ -6,6 +6,7 @@ import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.scene.web.WebView;
@@ -30,6 +31,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Paths;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -45,7 +47,7 @@ public class WebBrowser extends Application {
 	private TabPane tabPane;
 	private MenuBar menuBar;
 	private Menu webMenu;
-	private MenuItem openURL, openHTMLFile, openTextFile, openImage, openHomePage, openSearchPage, saveToPDF, exit;
+	private MenuItem openURL, openHTMLFile, openTextFile, openImage, openHomePage, openSearchPage, saveToPDF, convertToPDF, exit;
 	private String home = "https://docs.oracle.com/javase/8/docs/api/";
 
 	public WebBrowser() {}
@@ -122,6 +124,20 @@ public class WebBrowser extends Application {
 		}
 	}
 
+	private void convertToPDF(File file) {
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			String data = reader.lines().collect(Collectors.joining("\n"));
+			String path = file.getPath();
+			int lio = path.lastIndexOf(".");
+			if (lio > 0) {
+				path = path.substring(0, lio) + ".pdf";
+				HtmlConverter.convertToPdf(data, new FileOutputStream(path));
+			}
+		} catch (IOException e) {
+			System.err.println(e);
+		}
+	}
+
 	private String getHost(String url) {
 		try { 
 			return new URL(url).getHost();
@@ -144,6 +160,7 @@ public class WebBrowser extends Application {
 		openHTMLFile.setOnAction(e -> {
 			FileChooser fileChooser = new FileChooser();
 			fileChooser.setTitle("Open file");
+			fileChooser.getExtensionFilters().add(new ExtensionFilter("HTML files", "*.html"));
 			File file = fileChooser.showOpenDialog(stage);
 			if (file != null)
 				openHTMLFile(file);
@@ -151,6 +168,8 @@ public class WebBrowser extends Application {
 		openTextFile.setOnAction(e -> {
 			FileChooser fileChooser = new FileChooser();
 			fileChooser.setTitle("Open file");
+			fileChooser.getExtensionFilters().add(new ExtensionFilter("Text files", "*.txt"));
+			fileChooser.getExtensionFilters().add(new ExtensionFilter("HTML files", "*.html"));
 			File file = fileChooser.showOpenDialog(stage);
 			if (file != null)
 				openTextFile(file);
@@ -169,6 +188,14 @@ public class WebBrowser extends Application {
 			File file = fileChooser.showSaveDialog(stage);
 			if (file != null)
 				saveToPDF(file);
+		});
+		convertToPDF.setOnAction(e -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle("Convert to PDF");
+			fileChooser.getExtensionFilters().add(new ExtensionFilter("HTML files", "*.html"));
+			File file = fileChooser.showOpenDialog(stage);
+			if (file != null)
+				convertToPDF(file);
 		});
 		exit.setOnAction(e -> stage.close());
 		stage.setOnCloseRequest(e -> {
@@ -189,8 +216,9 @@ public class WebBrowser extends Application {
 		openHomePage = new MenuItem("Open home page");
 		openSearchPage = new MenuItem("Open search page");
 		saveToPDF = new MenuItem("Save to PDF");
+		convertToPDF = new MenuItem("Convert to PDF");
 		exit = new MenuItem("Exit");
-		webMenu.getItems().addAll(openURL, openHTMLFile, openTextFile, openImage, openHomePage, openSearchPage, saveToPDF, exit);
+		webMenu.getItems().addAll(openURL, openHTMLFile, openTextFile, openImage, openHomePage, openSearchPage, saveToPDF, convertToPDF, exit);
 		menuBar.getMenus().add(webMenu);
 		root.setTop(menuBar);
 		tabPane = new TabPane();
