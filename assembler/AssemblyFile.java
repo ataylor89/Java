@@ -107,10 +107,11 @@ public class AssemblyFile {
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
-
+    
+        stringBuilder.append("Assembly file\n");
 		stringBuilder.append("Globals: " + globals.stream().collect(Collectors.joining(" ")));
 		stringBuilder.append("\n");
-		stringBuilder.append("External object files: " + externs.stream().collect(Collectors.joining(" ")));
+		stringBuilder.append("Externs: " + externs.stream().collect(Collectors.joining(" ")));
 		stringBuilder.append("\n");
 		stringBuilder.append("Text section:\n" + textSection);
 		stringBuilder.append("Data section:\n" + dataSection);

@@ -3,12 +3,10 @@ import java.util.stream.*;
 public class Bytes {
 
 	public static byte[] littleendian(int val) {
-        System.out.printf("littleendian(%x)\n", val);
 		byte[] bytes = new byte[4];
 		int bitmask = 0xFF;
 		for (int i = 0; i < bytes.length; i++) {
 			bytes[i] = (byte) ((val & bitmask) >> 8*i);  
-            System.out.printf("val: %x bitmask: %x byte: %x\n", val, bitmask, bytes[i]);
             bitmask <<= 8;
 		}
 		return bytes;
