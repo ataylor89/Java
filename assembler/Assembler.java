@@ -23,11 +23,10 @@ public class Assembler {
 	}
 
 	public Instruction parseInstruction(String text) {
-		Instruction instruction = new Instruction();
-		Opcode opcode = null;
 		String[] tokens = text.trim().split("\\s");
-		Operand[] operands = new Operand[tokens.length-1];
-           // IntStream.range(0, tokens.length).mapToObj(i -> String.format("%d: %s", i, tokens[i])).forEach(System.out::println);
+		Instruction instruction = new Instruction();
+        Opcode opcode = null;
+        Operand[] operands = new Operand[tokens.length-1];
 		if (tokens.length >= 1) 
 			opcode = Opcode.valueOf(tokens[0].trim().toUpperCase());
 		if (tokens.length >= 2) 
@@ -39,6 +38,53 @@ public class Assembler {
 		instruction.setOperands(operands);
 		return instruction;
 	}
+
+    public List<String> parseGlobals(String code) {
+        List<String> globals = new ArrayList<>();
+        int directiveStart = code.indexOf("global");
+        int directiveEnd = code.indexOf("\n", directiveStart);
+        while (directiveStart > 0 && directiveEnd > 0) {
+            String directive = code.substring(directiveStart, directiveEnd);
+            String[] tokens = directive.split(" ");
+            String global = tokens[1].trim();
+            globals.add(global);
+            directiveStart = code.indexOf("global", directiveEnd);
+            directiveEnd = code.indexOf("\n", directiveStart);
+        }
+        return globals;
+    }
+
+    public List<String> parseExterns(String code) {
+        List<String> externs = new ArrayList<>();
+        int directiveStart = code.indexOf("extern");
+        int directiveEnd = code.indexOf("\n", directiveStart);
+        while (directiveStart > 0 && directiveEnd > 0) {
+            String directive = code.substring(directiveStart, directiveEnd);
+            String[] tokens = directive.split(" ");
+            String extern = tokens[1].trim();
+            externs.add(extern);
+            directiveStart = code.indexOf("extern", directiveEnd);
+            directiveEnd = code.indexOf("\n", directiveStart);
+        }
+        return externs;
+    }
+
+    public List<Instruction> parseInstructions(String code) {
+		int textIndex = code.indexOf("section .text");
+        int dataIndex = code.indexOf("section .data");
+        String textSection = code.substring(textIndex, dataIndex-1);
+        List<Instruction> instructions = new ArrayList<>();
+        int instructionStart = textSection.indexOf("\n", textIndex) + 1;
+		int instructionEnd = textSection.indexOf("\n", instructionStart);
+		while (instructionStart > 0 && instructionEnd > 0) {
+			String line = textSection.substring(instructionStart, instructionEnd);
+			Instruction instruction = parseInstruction(line);
+			instructions.add(instruction);
+			instructionStart = instructionEnd + 1;
+			instructionEnd = textSection.indexOf("\n", instructionStart);
+		}
+        return instructions;
+    }
 
 	public AssemblyFile parse(File file) {
 		AssemblyFile assemblyFile = new AssemblyFile();
@@ -53,24 +99,13 @@ public class Assembler {
 		assemblyFile.setDataSection(dataSection);
 		String[] tokens = code.split("\\s");
 		assemblyFile.setTokens(tokens);
-		for (int i = 0; i < tokens.length; i++) {
-			String token = tokens[i];
-			if (token.equals("global"))
-				assemblyFile.addGlobal(tokens[i+1]);
-			else if (token.equals("extern"))
-				assemblyFile.addExtern(tokens[i+1]);
-		}
-		int instructionStart = textSection.indexOf("\n", textIndex) + 1;
-		int instructionEnd = textSection.indexOf("\n", instructionStart);
-		while (instructionStart > 0 && instructionEnd > 0) {
-			String text = textSection.substring(instructionStart, instructionEnd);
-            	// System.out.printf("Instruction: %s\n", text);
-			Instruction instruction = parseInstruction(text);
-			assemblyFile.addInstruction(instruction);
-			instructionStart = instructionEnd + 1;
-			instructionEnd = textSection.indexOf("\n", instructionStart);
-		}
-		return assemblyFile;
+		List<String> globals = parseGlobals(code);
+        assemblyFile.setGlobals(globals);
+        List<String> externs = parseExterns(code);
+        assemblyFile.setExterns(externs);
+		List<Instruction> instructions = parseInstructions(code);
+        assemblyFile.setInstructions(instructions);
+        return assemblyFile;
 		
 	}
 
@@ -79,15 +114,12 @@ public class Assembler {
 		AssemblyFile assemblyFile = parse(sourceFile);
 		List<Instruction> instructions = assemblyFile.getInstructions();
 		for (Instruction instruction : instructions) {
-			// System.out.println(instruction);
 			Opcode opcode = instruction.getOpcode();
 			Operand[] operands = instruction.getOperands();
 			switch (opcode) {
 				case MOV:	
 					Operand dest = operands[0];
 					Operand src = operands[1];
-                    System.out.println("Dest operand: " + dest);
-                    System.out.println("Src operand: " + src);
                     if (dest != null && src != null) {
 						objectFile.addBytes(dest.getBytes());
 						objectFile.addBytes(src.getBytes());

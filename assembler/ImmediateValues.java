@@ -5,7 +5,8 @@ public class ImmediateValues {
 		try {
 			Integer num = Integer.decode(text);
 		} catch (NumberFormatException e) {
-			return false;
+			System.err.println(e);
+            return false;
 		}
         return true;
 	}
@@ -20,7 +21,7 @@ public class ImmediateValues {
 		} catch (NumberFormatException e) {
 			System.err.println(e);
 		}   
-		byte[] bytes = Bytes.bigendian(value);
+		byte[] bytes = Bytes.littleendian(value);
 		immediateValue.setBytes(bytes);
         return immediateValue;
 	}

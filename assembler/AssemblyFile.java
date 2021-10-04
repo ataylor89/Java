@@ -28,10 +28,18 @@ public class AssemblyFile {
 		externs.add(extern);
 	}
 
+    public void setGlobals(List<String> globals) {
+        this.globals = globals;
+    }
+
 	public List<String> getGlobals() {
 		return globals;
 	}
 	
+    public void setExterns(List<String> externs) {
+        this.externs = externs;
+    }
+
 	public List<String> getExterns() {
 		return externs;
 	}
@@ -87,6 +95,10 @@ public class AssemblyFile {
 	public void addInstruction(Instruction instruction) {
 		instructions.add(instruction);
 	}
+    
+    public void setInstructions(List<Instruction> instructions) {
+        this.instructions = instructions;
+    }
 
 	public List<Instruction> getInstructions() {
 		return instructions;

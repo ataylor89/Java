@@ -40,6 +40,7 @@ public class ObjectFile {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
+        sb.append("Object file\n");
 		sb.append(String.format("Size: %d\n", index));
 		sb.append("Hex:\n");
 		sb.append(IntStream.range(0, index).mapToObj(i -> String.format("%x", bytes[i])).collect(Collectors.joining(" ")));
