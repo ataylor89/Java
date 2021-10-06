@@ -13,6 +13,7 @@ public class AssemblyFile {
 	private String textSection, dataSection, bssSection;
 	private String[] tokens;	
 	private List<Instruction> instructions;
+    private List<Directive> directives;
 
 	public AssemblyFile() {
 		globals = new ArrayList<>();
@@ -104,6 +105,14 @@ public class AssemblyFile {
 		return instructions;
 	}
 
+    public void setDirectives(List<Directive> directives) {
+        this.directives = directives;
+    }
+
+    public List<Directive> getDirectives() {
+        return directives;
+    }
+
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
@@ -117,6 +126,8 @@ public class AssemblyFile {
 		stringBuilder.append("Data section:\n" + dataSection);
 		stringBuilder.append("\n");
 		stringBuilder.append("Instructions:\n" + instructions.stream().map(instruction->instruction.getText()).collect(Collectors.joining("\n")));
+        stringBuilder.append("\n");
+        stringBuilder.append("Directives:\n" + directives.stream().map(directive->directive.getText()).collect(Collectors.joining("\n")));
 
 		return stringBuilder.toString();
 	}

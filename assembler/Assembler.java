@@ -69,21 +69,72 @@ public class Assembler {
         return externs;
     }
 
-    public List<Instruction> parseInstructions(String code) {
+    public List<Instruction> parseText(String code) {
 		int textIndex = code.indexOf("section .text");
         int dataIndex = code.indexOf("section .data");
-        String textSection = code.substring(textIndex, dataIndex-1);
+        String text = code.substring(textIndex, dataIndex-1);
         List<Instruction> instructions = new ArrayList<>();
-        int instructionStart = textSection.indexOf("\n", textIndex) + 1;
-		int instructionEnd = textSection.indexOf("\n", instructionStart);
-		while (instructionStart > 0 && instructionEnd > 0) {
-			String line = textSection.substring(instructionStart, instructionEnd);
+        int start = text.indexOf("\n", textIndex) + 1;
+		int end = text.indexOf("\n", start);
+		while (start > 0 && end > 0) {
+			String line = text.substring(start, end);
 			Instruction instruction = parseInstruction(line);
 			instructions.add(instruction);
-			instructionStart = instructionEnd + 1;
-			instructionEnd = textSection.indexOf("\n", instructionStart);
+			start = end + 1;
+			end = text.indexOf("\n", start);
 		}
         return instructions;
+    }
+    
+    /*
+    public Directive parseDirective(String text) {
+        String[] tokens = text.split(" ");
+        return new Directive(tokens[0], tokens[1], tokens[2]);     
+    }
+
+    public Symbol parseSymbol(String text) {
+       String[] tokens = text.split(" ");
+       String label = tokens[0];
+       if (label.endsWith(":"))
+            label = label.substring(0, label.length() - 1);
+       String value = tokens[2];
+             
+    }
+
+    public List<Directive> parseData(String code) {
+        int dataIndex = code.indexOf("section .data");
+        int start = code.indexOf("\n", dataIndex) + 1;
+        int end = code.indexOf("\n", start);
+        while (start > 0 && end > 0) {
+            String line = code.substring(start, end);
+            String[] tokens = line.split(" ");
+            String name = tokens[0];
+            String directive = tokens[1];
+            String value = tokens[2];
+            if (value.startsWith("\"") && value.endsWith("\""))
+                value = value.substring(1, value.length()-1);
+            Symbol symbol = new Symbol();
+            symbol.setName(name);
+            symbol.setValue(value);
+            Symbols.getMap().put(name, symbol);
+            Symbols.getList().add(symbol);
+        }
+    }
+    */
+
+    public List<Directive> parseData(String code) {
+        List<Directive> directives = new ArrayList<>();
+        int dataIndex = code.indexOf("section .data");
+        int start = code.indexOf("\n", dataIndex) + 1;
+        int end = code.indexOf("\n", start);
+        while (start > 0 && end > 0) {
+            String line = code.substring(start, end);
+            Directive directive = Directives.parse(line);
+            directives.add(directive);
+            start = end + 1;
+            end = code.indexOf("\n", start);
+        }
+        return directives;
     }
 
 	public AssemblyFile parse(File file) {
@@ -103,8 +154,10 @@ public class Assembler {
         assemblyFile.setGlobals(globals);
         List<String> externs = parseExterns(code);
         assemblyFile.setExterns(externs);
-		List<Instruction> instructions = parseInstructions(code);
+		List<Instruction> instructions = parseText(code);
         assemblyFile.setInstructions(instructions);
+        List<Directive> directives = parseData(code);
+        assemblyFile.setDirectives(directives);
         return assemblyFile;
 		
 	}
