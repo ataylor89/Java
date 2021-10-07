@@ -5,45 +5,7 @@ import java.util.Map;
 import java.util.HashMap;
 public class Parser {
 
-    private Map<String, Opcode> opcodes;
-    private Map<String, Register> registers;
-    private Map<String, Directive> directives;
-
-    public Parser() {
-        initOpcodes();
-        initRegisters();
-        initDirectives();
-    }   
-
-    private void initOpcodes() {
-        opcodes = new HashMap<>();
-        opcodes.put("mov", Opcode.MOV);
-        opcodes.put("and", Opcode.AND);
-        opcodes.put("or", Opcode.OR);
-        opcodes.put("xor", Opcode.XOR);
-        opcodes.put("syscall", Opcode.SYSCALL);
-    }
-
-    private void initRegisters() {
-        registers = new HashMap<>();
-        registers.put("rax", Register.RAX);
-        registers.put("rdi", Register.RDI);
-        registers.put("rsi", Register.RSI);
-        registers.put("rdx", Register.RDX);
-    }
-
-    private void initDirectives() {
-        directives = new HashMap<>();
-        directives.put("db", Directive.DB);
-        directives.put("dw", Directive.DW);
-        directives.put("dd", Directive.DD);
-        directives.put("dq", Directive.DQ);
-        directives.put("resb", Directive.RESB);
-        directives.put("resw", Directive.RESW);
-        directives.put("resd", Directive.RESD);
-        directives.put("resq", Directive.RESQ);
-        directives.put("equ", Directive.EQU);
-    }
+    public Parser() {}   
 
     public AssemblyFile parse(File file) {
         AssemblyFile assemblyFile = new AssemblyFile();
@@ -194,13 +156,13 @@ public class Parser {
     }
  
     public Opcode parseOpcode(String opcode) {
-        if (opcodes.containsKey(opcode))
-            return opcodes.get(opcode);
+        if (Opcode.map().containsKey(opcode))
+            return Opcode.map().get(opcode);
         return null;
     }
 
     public Operand parseOperand(String operand) {
-        if (registers.containsKey(operand))
+        if (Register.map().containsKey(operand))
             return Operand.REGISTER;
         if (symbols.containsKey(operand))
             return Operand.SYMBOL;
@@ -214,10 +176,10 @@ public class Parser {
     }
 
     public Register parseRegister(String register) {
-        if (!registers.containsKey(register)) 
+        if (!Register.map().containsKey(register)) 
             return new byte[] {};
 
-        return registers.get(register);
+        return Register.map().get(register);
     }
 
     public byte[] parseImmediateValue(String immediateValue) {
