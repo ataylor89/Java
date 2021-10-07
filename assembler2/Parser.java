@@ -32,6 +32,19 @@ public class Parser {
         registers.put("rdx", Register.RDX);
     }
 
+    private void initDirectives() {
+        directives = new HashMap<>();
+        directives.put("db", Directive.DB);
+        directives.put("dw", Directive.DW);
+        directives.put("dd", Directive.DD);
+        directives.put("dq", Directive.DQ);
+        directives.put("resb", Directive.RESB);
+        directives.put("resw", Directive.RESW);
+        directives.put("resd", Directive.RESD);
+        directives.put("resq", Directive.RESQ);
+        directives.put("equ", Directive.EQU);
+    }
+
     public AssemblyFile parse(File file) {
         AssemblyFile assemblyFile = new AssemblyFile();
         assemblyFile.setFile(file);
@@ -180,18 +193,6 @@ public class Parser {
         return bssDirectives;
     }
  
-    public byte[] parseInstruction(String instruction) {
-        String[] tokens = instruction.split("\\s+", 3);
-        Opcode opcode = parseOpcode(tokens[0]);
-        switch (opcode) {
-            case MOV:
-                return parseMovInstruction(instruction);
-            default:
-                System.err.println("Unknown opcode: " + tokens[0]);
-                return new byte[] {};
-        }
-    }
-
     public Opcode parseOpcode(String opcode) {
         if (opcodes.containsKey(opcode))
             return opcodes.get(opcode);
@@ -212,12 +213,11 @@ public class Parser {
         return null;
     }
 
-    public byte[] parseRegister(String register) {
+    public Register parseRegister(String register) {
         if (!registers.containsKey(register)) 
             return new byte[] {};
 
-        Register register = registers.get(register);
-        return register.getBytes();
+        return registers.get(register);
     }
 
     public byte[] parseImmediateValue(String immediateValue) {
@@ -228,34 +228,7 @@ public class Parser {
             System.err.println(e);
         }
         return new byte[] {};
-    }
-
-    public byte[] parseMovInstrution(String instruction) {
-        List<Byte> lst = new ArrayList<>();
-        String[] tokens = instruction.split("\\s+", 3);
-        if (!tokens[0].equals("mov") || tokens.length != 3)   
-            return new byte[] {};
-        Operand op1 = parseOperand(tokens[1]);
-        Operand op2 = parseOperand(tokens[2]);
-        switch (op1) {
-            case REGISTER:
-                byte[] register = parseRegister(tokens[1]);
-                for (byte b : register)
-                    lst.add(b);
-                break;
-        }
-        switch (op2) {
-            case IMMEDIATE_VALUE:
-                byte[] number = parseImmediateValue(tokens[2]);
-                for (byte b : number)
-                    lst.add(b);
-                break;
-        }
-        byte[] bytes = new byte[lst.size()];
-        for (int i = 0; i < bytes.length; i++)
-            bytes[i] = lst.get(i);
-        return bytes;
-    }   
+    }  
   
 	public byte[] littleendian(int val) {
 		byte[] bytes = new byte[8];
