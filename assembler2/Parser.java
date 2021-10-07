@@ -5,64 +5,6 @@ import java.util.Map;
 import java.util.HashMap;
 public class Parser {
 
-    public enum Opcode {
-        MOV, AND, OR, XOR, SYSCALL;
-    }
-
-    public enum Operand {
-        REGISTER, IMMEDIATE_VALUE, EFFECTIVE_ADDRESS, SYMBOL;
-    }
- 
-    public enum Register {
-        private byte[] bytes;
-
-        RAX (new byte[] {(byte) 0x48, (byte) 0xb8}), 
-        RDI (new byte[] {(byte) 0x48, (byte) 0xbf}), 
-        RSI (new byte[] {(byte) 0x48, (byte) 0xbe}), 
-        RDX (new byte[] {(byte) 0x48, (byte) 0xba});
-
-        Register(byte[] bytes) {
-            this.bytes = bytes;
-        }
-
-        public byte[] getBytes() {
-            return bytes;
-        }
-    }
-
-    public enum Directive {
-        DB, DW, DD, DQ, RESB, RESW, RESD, RESQ, EQU
-    }
-
-    public class Symbol {
-        private String name;
-        private byte[] bytes;
-
-        public Symbol() {}
-        
-        public Symbol(String name, byte[] bytes) {
-            this.name = name;
-            this.bytes = bytes;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setBytes(byte[] bytes) {
-            this.bytes = bytes;
-        }
-
-        public byte[] getBytes() {
-            return bytes;
-        }
-    }
- 
-    private Map<String, Symbol> symbols;   
     private Map<String, Opcode> opcodes;
     private Map<String, Register> registers;
     private Map<String, Directive> directives;
@@ -70,7 +12,6 @@ public class Parser {
     public Parser() {
         initOpcodes();
         initRegisters();
-        initSymbols();
         initDirectives();
     }   
 
@@ -89,10 +30,6 @@ public class Parser {
         registers.put("rdi", Register.RDI);
         registers.put("rsi", Register.RSI);
         registers.put("rdx", Register.RDX);
-    }
-
-    private void initSymbols() {
-        symbols = new HashMap<>();
     }
 
     public AssemblyFile parse(File file) {
