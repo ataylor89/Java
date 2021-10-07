@@ -107,8 +107,10 @@ public class Assembler {
         int end = code.indexOf("\n", start);
         while (start > 0 && end > 0) {
             String line = code.substring(start, end);
-            String[] tokens = line.split(" ");
-            String name = tokens[0];
+            String[] tokens = line.split("\\s+", 3);
+            String name = tokens[0].trim();
+            if (name.endsWith(":"))
+                name = name.substring(0, name.length()-2);
             String directive = tokens[1];
             String value = tokens[2];
             if (value.startsWith("\"") && value.endsWith("\""))
@@ -127,12 +129,24 @@ public class Assembler {
         int dataIndex = code.indexOf("section .data");
         int start = code.indexOf("\n", dataIndex) + 1;
         int end = code.indexOf("\n", start);
-        while (start > 0 && end > 0) {
+        while (start > 0 && end > start) {
             String line = code.substring(start, end);
+            // System.out.println("Line: " + line);
             Directive directive = Directives.parse(line);
             directives.add(directive);
+            Symbol symbol = new Symbol();
+            String name = directive.getLabel();
+            symbol.setName(directive.getLabel());
+            symbol.setValue(directive.getOperand());
+            symbol.setBytes(directive.getBytes());
+            Map<String,Symbol> symtable = Symbols.getMap();
+            symtable.put(symbol.getName(), symbol);
+            List<Symbol> symbols = Symbols.getList();
+            symbols.add(symbol);
             start = end + 1;
             end = code.indexOf("\n", start);
+            if (end < 0)
+                end = code.length();
         }
         return directives;
     }
@@ -194,6 +208,10 @@ public class Assembler {
 				case JLE:
 		   }		
 		}
+        List<Symbol> symbols = Symbols.getList();
+        for (Symbol symbol : symbols) {
+            objectFile.addBytes(symbol.getBytes());
+        }
         return objectFile;
 	}
 

@@ -29,4 +29,18 @@ public class Symbol extends Operand {
     public int getOffset() {
         return offset;
     }
+
+    @Override
+    public String toString() {   
+		StringBuilder sb = new StringBuilder();
+        sb.append("Name: " + name);
+        sb.append("\n");
+        sb.append("Type: " + type);
+        sb.append("\n");
+        sb.append("Value: " + value);
+        sb.append("\n");
+        sb.append("Bytes: " + Bytes.hexstring(bytes));
+        sb.append("\n");
+        return sb.toString();
+    }
 }

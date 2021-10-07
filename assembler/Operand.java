@@ -1,9 +1,9 @@
 package assembler;
 public class Operand {
 	
-	private String name;
-    private int type;
-	private byte[] bytes;
+	protected String name;
+    protected int type;
+	protected byte[] bytes;
 
     public static final int REGISTER = 0;
 	public static final int IMMEDIATE_VALUE = 1;
