@@ -1,8 +1,100 @@
 package assembler2;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 public class Parser {
-    
+
+    public enum Opcode {
+        MOV, AND, OR, XOR, SYSCALL;
+    }
+
+    public enum Operand {
+        REGISTER, IMMEDIATE_VALUE, EFFECTIVE_ADDRESS, SYMBOL;
+    }
+ 
+    public enum Register {
+        private byte[] bytes;
+
+        RAX (new byte[] {(byte) 0x48, (byte) 0xb8}), 
+        RDI (new byte[] {(byte) 0x48, (byte) 0xbf}), 
+        RSI (new byte[] {(byte) 0x48, (byte) 0xbe}), 
+        RDX (new byte[] {(byte) 0x48, (byte) 0xba});
+
+        Register(byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+        public byte[] getBytes() {
+            return bytes;
+        }
+    }
+
+    public enum Directive {
+        DB, DW, DD, DQ, RESB, RESW, RESD, RESQ, EQU
+    }
+
+    public class Symbol {
+        private String name;
+        private byte[] bytes;
+
+        public Symbol() {}
+        
+        public Symbol(String name, byte[] bytes) {
+            this.name = name;
+            this.bytes = bytes;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setBytes(byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+        public byte[] getBytes() {
+            return bytes;
+        }
+    }
+ 
+    private Map<String, Symbol> symbols;   
+    private Map<String, Opcode> opcodes;
+    private Map<String, Register> registers;
+    private Map<String, Directive> directives;
+
+    public Parser() {
+        initOpcodes();
+        initRegisters();
+        initSymbols();
+        initDirectives();
+    }   
+
+    private void initOpcodes() {
+        opcodes = new HashMap<>();
+        opcodes.put("mov", Opcode.MOV);
+        opcodes.put("and", Opcode.AND);
+        opcodes.put("or", Opcode.OR);
+        opcodes.put("xor", Opcode.XOR);
+        opcodes.put("syscall", Opcode.SYSCALL);
+    }
+
+    private void initRegisters() {
+        registers = new HashMap<>();
+        registers.put("rax", Register.RAX);
+        registers.put("rdi", Register.RDI);
+        registers.put("rsi", Register.RSI);
+        registers.put("rdx", Register.RDX);
+    }
+
+    private void initSymbols() {
+        symbols = new HashMap<>();
+    }
+
     public AssemblyFile parse(File file) {
         AssemblyFile assemblyFile = new AssemblyFile();
         assemblyFile.setFile(file);
@@ -28,6 +120,8 @@ public class Parser {
         assemblyFile.setGlobals(globals);
         String[] externs = parseExterns(code);
         assemblyFile.setExterns(externs);
+        SymbolTable symbols = parseSymbols(code);
+        assemblyFile.setSymbolTable(symbols);
     }
 
     public String parseText(String code) {
@@ -148,7 +242,94 @@ public class Parser {
             bssDirectives[i] = lst.get(i);
         return bssDirectives;
     }
-   
+ 
+    public byte[] parseInstruction(String instruction) {
+        String[] tokens = instruction.split("\\s+", 3);
+        Opcode opcode = parseOpcode(tokens[0]);
+        switch (opcode) {
+            case MOV:
+                return parseMovInstruction(instruction);
+            default:
+                System.err.println("Unknown opcode: " + tokens[0]);
+                return new byte[] {};
+        }
+    }
+
+    public Opcode parseOpcode(String opcode) {
+        if (opcodes.containsKey(opcode))
+            return opcodes.get(opcode);
+        return null;
+    }
+
+    public Operand parseOperand(String operand) {
+        if (registers.containsKey(operand))
+            return Operand.REGISTER;
+        if (symbols.containsKey(operand))
+            return Operand.SYMBOL;
+        try {
+            Long l = Long.decode(operand);
+            return Operand.IMMEDIATE_VALUE;
+        } catch (NumberFormatException e) {
+            System.err.println(e);
+        }
+        return null;
+    }
+
+    public byte[] parseRegister(String register) {
+        if (!registers.containsKey(register)) 
+            return new byte[] {};
+
+        Register register = registers.get(register);
+        return register.getBytes();
+    }
+
+    public byte[] parseImmediateValue(String immediateValue) {
+        try {
+            Long number = Long.decode(immediateValue);
+            return litleendian(number);
+        } catch (NumberFormatException e) {
+            System.err.println(e);
+        }
+        return new byte[] {};
+    }
+
+    public byte[] parseMovInstrution(String instruction) {
+        List<Byte> lst = new ArrayList<>();
+        String[] tokens = instruction.split("\\s+", 3);
+        if (!tokens[0].equals("mov") || tokens.length != 3)   
+            return new byte[] {};
+        Operand op1 = parseOperand(tokens[1]);
+        Operand op2 = parseOperand(tokens[2]);
+        switch (op1) {
+            case REGISTER:
+                byte[] register = parseRegister(tokens[1]);
+                for (byte b : register)
+                    lst.add(b);
+                break;
+        }
+        switch (op2) {
+            case IMMEDIATE_VALUE:
+                byte[] number = parseImmediateValue(tokens[2]);
+                for (byte b : number)
+                    lst.add(b);
+                break;
+        }
+        byte[] bytes = new byte[lst.size()];
+        for (int i = 0; i < bytes.length; i++)
+            bytes[i] = lst.get(i);
+        return bytes;
+    }   
+  
+	public byte[] littleendian(int val) {
+		byte[] bytes = new byte[8];
+		long bitmask = 0xFF;
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte) ((val & bitmask) >> 8*i);  
+            bitmask <<= 8;
+		}
+		return bytes;
+	} 
+
     public String readFile(File file) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(file));

@@ -12,6 +12,7 @@ public AssemblyFile {
     private String[] bssDirectives;
     private String[] globals;
     private String[] externs;   
+    private SymbolTable symbolTable;
     
     public void setFile(File file) {
         this.file = file;
@@ -91,5 +92,13 @@ public AssemblyFile {
 
     public String[] getExterns() {
         return externs;
+    }
+
+    public void setSymbolTable(SymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
+    }
+    
+    public SymbolTable getSymbolTable() {
+        return symbolTable;
     }
 }
