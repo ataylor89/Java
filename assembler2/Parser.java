@@ -39,6 +39,7 @@ public class Parser {
         directives.put("resw", Directive.RESW);
         directives.put("resd", Directive.RESD);
         directives.put("resq", Directive.RESQ);
+        directives.put("equ", Directive.EQU);
     }
 
     public AssemblyFile parse(File file) {
@@ -79,7 +80,7 @@ public class Parser {
 
     public String parseText(String code) {
         int start = code.indexOf("section .text");
-        int end = code.indexOf("section", start+13);
+        int end = code.indexOf("section", start+13) - 1;
         if (end < 0)
             end = code.length();
         return code.substring(start, end);
@@ -95,10 +96,12 @@ public class Parser {
 
     public String parseBss(String code) {
         int start = code.indexOf("section .bss");
-        int end = code.indexOf("section", start+13);
+        int end = code.indexOf("section", start);
         if (end < 0)
             end = code.length();
-        return code.substring(start, end);
+        if (start > 0 && end > start)
+            return code.substring(start, end);
+        return null;
     }
 
     public String[] parseGlobals(String code) {
@@ -178,6 +181,8 @@ public class Parser {
     public String[] parseBssDirectives(String code) {
         List<String> lst = new ArrayList<>();
         String bss = parseBss(code);
+        if (bss == null)
+            return null;
         int start = bss.indexOf("\n") + 1;
         int end = bss.indexOf("\n", start);
         if (end < 0)
@@ -260,7 +265,7 @@ public class Parser {
                     String label = parseLabel(tokens[0]);
                     symbol.setName(label);
                     symbol.setValue(tokens[2]);
-                    symbol.setBytes(parseDb(tokens[2]));
+                    symbol.setBytes(parseDb(dataDirectives[i]));
                     symbolTable.getList().add(symbol);
                     symbolTable.getMap().put(label, symbol);
                     break;
@@ -298,5 +303,12 @@ public class Parser {
             }
         }
         return byteArray.getBytes();
+    }
+
+    public static void main(String[] args) {
+        File file = new File(args[0]);
+        Parser parser = new Parser();
+        AssemblyFile af = parser.parse(file);
+        System.out.println(af);
     }
 }

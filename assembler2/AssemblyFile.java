@@ -126,8 +126,8 @@ public class AssemblyFile {
             sb.append("BSS directives:\n" + Stream.of(bssDirectives).collect(Collectors.joining("\n")));
             sb.append("\n");
         }
-        if (symbolTable.getList().size() > 0)
-            sb.append("Symbol Table:\n" + symbolTable);
+        if (symbolTable != null && symbolTable.getList().size() > 0)
+            sb.append(symbolTable);
 		
         return sb.toString();
 	}
