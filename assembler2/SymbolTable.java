@@ -30,6 +30,13 @@ public class SymbolTable {
 
     @Override
     public String toString() {
-        return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Symbol Table\n");
+        for (int i = 0; i < list.size(); i++) {
+            sb.append(list.get(i));
+            if (i < list.size() - 1)
+                sb.append("\n");
+        }
+        return sb.toString();
     }
 }

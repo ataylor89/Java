@@ -1,5 +1,7 @@
 package assembler2;
 import java.io.File;
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
 public class AssemblyFile {
  
     private File file;
@@ -101,9 +103,32 @@ public class AssemblyFile {
     public SymbolTable getSymbolTable() {
         return symbolTable;
     }
-
-    @Override
-    public String toString() {
-        return "";
-    }
+    
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+    
+        sb.append("Assembly file\n");
+		sb.append("Globals: " + Stream.of(globals).collect(Collectors.joining(" ")));
+		sb.append("\n");
+		sb.append("Externs: " + Stream.of(externs).collect(Collectors.joining(" ")));
+		sb.append("\n");
+		sb.append("Text section:\n" + text);
+		sb.append("Data section:\n" + data);
+		sb.append("\n");
+		sb.append("Instructions:\n" + Stream.of(instructions).collect(Collectors.joining("\n")));
+        sb.append("\n");
+        if (dataDirectives != null && dataDirectives.length > 0) {
+            sb.append("Data directives:\n" + Stream.of(dataDirectives).collect(Collectors.joining("\n")));
+            sb.append("\n");
+        }
+        if (bssDirectives != null && bssDirectives.length > 0) {
+            sb.append("BSS directives:\n" + Stream.of(bssDirectives).collect(Collectors.joining("\n")));
+            sb.append("\n");
+        }
+        if (symbolTable.getList().size() > 0)
+            sb.append("Symbol Table:\n" + symbolTable);
+		
+        return sb.toString();
+	}
 }

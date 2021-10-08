@@ -259,6 +259,7 @@ public class Parser {
                     Symbol symbol = new Symbol();
                     String label = parseLabel(tokens[0]);
                     symbol.setName(label);
+                    symbol.setValue(tokens[2]);
                     symbol.setBytes(parseDb(tokens[2]));
                     symbolTable.getList().add(symbol);
                     symbolTable.getMap().put(label, symbol);

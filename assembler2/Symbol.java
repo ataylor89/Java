@@ -1,6 +1,7 @@
 package assembler2;
 public class Symbol {
     private String name;
+    private String value;
     private byte[] bytes;
 
     public Symbol() {}
@@ -18,11 +19,24 @@ public class Symbol {
         return name;
     }
 
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
     public void setBytes(byte[] bytes) {
         this.bytes = bytes;
     }
 
     public byte[] getBytes() {
         return bytes;
+    }
+
+    @Override
+    public String toString() {
+        return name + ": " + value;
     }
 }
