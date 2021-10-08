@@ -197,9 +197,9 @@ public class Parser {
     }
  
     public Opcode parseOpcode(String opcode) {
-        if (opcodes.containsKey(opcode))
-            return opcodes.get(opcode);
-        return null;
+        if (!opcodes.containsKey(opcode))
+            return null;
+        return opcodes.get(opcode);
     }
 
     public Operand parseOperand(String operand, SymbolTable symbolTable) {
