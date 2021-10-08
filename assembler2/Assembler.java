@@ -3,21 +3,22 @@ public class Assembler {
     
     private Parser parser;
 
-    public Assembler() [
+    public Assembler() {
         parser = new Parser();
     }
 
     public ObjectFile assemble(String code) {
-
+        return new ObjectFile();
     }
     
+    /*   
     public byte[] assemble(String instruction) {
         String[] tokens = instruction.split("\\s+", 3);
         Opcode opcode = parser.parseOpcode(tokens[0]);
         return register;
         switch (opcode) {
             case MOV:
-                return parseMovInstruction(instruction);
+                return assembleMov(instruction);
             default:
                 System.err.println("Unknown opcode: " + tokens[0]);
                 return new byte[] {};
@@ -49,5 +50,6 @@ public class Assembler {
         for (int i = 0; i < bytes.length; i++)
             bytes[i] = lst.get(i);
         return bytes;
-    }   
+    } 
+    */  
 }

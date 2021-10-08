@@ -1,4 +1,8 @@
 package assembler2;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 public class SymbolTable {
     private Map<String, Symbol> map;
     private List<Symbol> list;
@@ -22,5 +26,10 @@ public class SymbolTable {
 
     public List<Symbol> getList() {
         return list;
+    }
+
+    @Override
+    public String toString() {
+        return "";
     }
 }

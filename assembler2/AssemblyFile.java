@@ -1,6 +1,6 @@
 package assembler2;
 import java.io.File;
-public AssemblyFile {
+public class AssemblyFile {
  
     private File file;
     private String code;
@@ -54,7 +54,7 @@ public AssemblyFile {
         return bss;
     }
 
-    public String[] setInstructions(String[] instructions) {
+    public void setInstructions(String[] instructions) {
         this.instructions = instructions;
     }
 
@@ -62,7 +62,7 @@ public AssemblyFile {
         return instructions;
     }
 
-    public String[] setDataDirectives(String[] dataDirectives) {
+    public void setDataDirectives(String[] dataDirectives) {
         this.dataDirectives = dataDirectives;
     }
 
@@ -100,5 +100,10 @@ public AssemblyFile {
     
     public SymbolTable getSymbolTable() {
         return symbolTable;
+    }
+
+    @Override
+    public String toString() {
+        return "";
     }
 }

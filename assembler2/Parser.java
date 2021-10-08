@@ -3,9 +3,43 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.stream.Collectors;
 public class Parser {
 
-    public Parser() {}   
+    private Map<String, Opcode> opcodes;
+    private Map<String, Register> registers;
+    private Map<String, Directive> directives;
+    
+    public Parser() {
+        initMaps();
+    }   
+
+    private void initMaps() {
+        opcodes = new HashMap<>();
+        opcodes.put("mov", Opcode.MOV);
+        opcodes.put("and", Opcode.AND);
+        opcodes.put("or", Opcode.OR);
+        opcodes.put("xor", Opcode.XOR);
+        opcodes.put("syscall", Opcode.SYSCALL);
+        registers = new HashMap<>();
+        registers.put("rax", Register.RAX);
+        registers.put("rdi", Register.RDI);
+        registers.put("rsi", Register.RSI);
+        registers.put("rdx", Register.RDX);
+        directives = new HashMap<>();
+        directives.put("db", Directive.DB);
+        directives.put("dw", Directive.DW);
+        directives.put("dd", Directive.DD);
+        directives.put("dq", Directive.DQ);
+        directives.put("resb", Directive.RESB);
+        directives.put("resw", Directive.RESW);
+        directives.put("resd", Directive.RESD);
+        directives.put("resq", Directive.RESQ);
+    }
 
     public AssemblyFile parse(File file) {
         AssemblyFile assemblyFile = new AssemblyFile();
@@ -27,13 +61,20 @@ public class Parser {
         String[] dataDirectives = parseDataDirectives(code);
         assemblyFile.setDataDirectives(dataDirectives);
         String[] bssDirectives = parseBssDirectives(code);
-        assemblyFile.setBssDirectives();
-        String[] globals = parseGlobals(code);
-        assemblyFile.setGlobals(globals);
-        String[] externs = parseExterns(code);
-        assemblyFile.setExterns(externs);
+        assemblyFile.setBssDirectives(bssDirectives);
         SymbolTable symbols = parseSymbols(code);
         assemblyFile.setSymbolTable(symbols);
+        return assemblyFile;
+    }
+
+    public String readFile(File file) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            return reader.lines().collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+        return null;
     }
 
     public String parseText(String code) {
@@ -84,7 +125,7 @@ public class Parser {
             String extern = code.substring(start, end);
             lst.add(extern);
             start = code.indexOf("extern", end);
-            end = code.indexof("\n", start);
+            end = code.indexOf("\n", start);
         }
         String[] externs = new String[lst.size()];
         for (int i = 0; i < lst.size(); i++)
@@ -96,14 +137,14 @@ public class Parser {
         List<String> lst = new ArrayList<>();
         String text = parseText(code);
         int start = text.indexOf("\n") + 1;
-        int end = text.IndexOf("\n", start);
+        int end = text.indexOf("\n", start);
         if (end < 0)
             end = text.length();
         while (start > 0 && end > start) {
             String instruction = text.substring(start, end);
             lst.add(instruction);
             start = end + 1;
-            end = text.IndexOf("\n", start);
+            end = text.indexOf("\n", start);
             if (end < 0)
                 end = text.length();
         }
@@ -138,7 +179,7 @@ public class Parser {
         List<String> lst = new ArrayList<>();
         String bss = parseBss(code);
         int start = bss.indexOf("\n") + 1;
-        int end = bss.indexOf("\n", end);
+        int end = bss.indexOf("\n", start);
         if (end < 0)
             end = bss.length();
         while (start > 0 && end > start) {
@@ -156,15 +197,15 @@ public class Parser {
     }
  
     public Opcode parseOpcode(String opcode) {
-        if (Opcode.map().containsKey(opcode))
-            return Opcode.map().get(opcode);
+        if (opcodes.containsKey(opcode))
+            return opcodes.get(opcode);
         return null;
     }
 
-    public Operand parseOperand(String operand) {
-        if (Register.map().containsKey(operand))
+    public Operand parseOperand(String operand, SymbolTable symbolTable) {
+        if (registers.containsKey(operand))
             return Operand.REGISTER;
-        if (symbols.containsKey(operand))
+        if (symbolTable.getMap().containsKey(operand))
             return Operand.SYMBOL;
         try {
             Long l = Long.decode(operand);
@@ -175,24 +216,30 @@ public class Parser {
         return null;
     }
 
-    public Register parseRegister(String register) {
-        if (!Register.map().containsKey(register)) 
-            return new byte[] {};
+    public Directive parseDirectiveType(String type) {
+        if (directives.containsKey(type))
+            return directives.get(type);
+        return null;
+    }
 
-        return Register.map().get(register);
+    public Register parseRegister(String register) {
+        if (!registers.containsKey(register)) 
+            return null;
+
+        return registers.get(register);
     }
 
     public byte[] parseImmediateValue(String immediateValue) {
         try {
             Long number = Long.decode(immediateValue);
-            return litleendian(number);
+            return littleendian(number);
         } catch (NumberFormatException e) {
             System.err.println(e);
         }
         return new byte[] {};
     }  
   
-	public byte[] littleendian(int val) {
+	public byte[] littleendian(long val) {
 		byte[] bytes = new byte[8];
 		long bitmask = 0xFF;
 		for (int i = 0; i < bytes.length; i++) {
@@ -202,14 +249,54 @@ public class Parser {
 		return bytes;
 	} 
 
-    public String readFile(File file) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            return reader.lines().collect(Collectors.joining("\n"));
-        } catch (IOException e) {
-            System.err.println(e);
+    public SymbolTable parseSymbols(String code) {
+        SymbolTable symbolTable = new SymbolTable();
+        String[] dataDirectives = parseDataDirectives(code);
+        for (int i = 0; i < dataDirectives.length; i++) {
+            String[] tokens = dataDirectives[i].split("\\s+", 3);
+            Directive directive = parseDirectiveType(tokens[1]); 
+            switch (directive) {
+                case DB:
+                    Symbol symbol = new Symbol();
+                    String label = parseLabel(tokens[0]);
+                    symbol.setName(label);
+                    symbol.setBytes(parseDb(tokens[2]));
+                    symbolTable.getList().add(symbol);
+                    symbolTable.getMap().put(label, symbol);
+                    break;
+            }        
         }
+        return symbolTable;
+    }
+
+    public String parseLabel(String label) {
+        if (label != null && label.endsWith(":"))
+            return label.substring(0, label.length()-1);
         return null;
     }
 
+    public byte[] parseDb(String directive) {
+        ByteArray byteArray = new ByteArray();
+        String[] tokens = directive.split("\\s+", 3);
+        String[] constants = tokens[2].split(",");
+        for (String constant : constants) {
+            if (constant.startsWith("'") && constant.endsWith("'")) {
+                constant = constant.substring(1, constant.length()-1);
+                byteArray.addBytes(constant.getBytes());
+            }
+            else if (constant.startsWith("\"") && constant.endsWith("\"")) {
+                constant = constant.substring(1, constant.length()-1);
+                byteArray.addBytes(constant.getBytes());
+            }
+            else {
+                try {
+                    Long num = Long.decode(constant);
+                    byteArray.addBytes(littleendian(num));
+                } catch (NumberFormatException e) {
+                    System.err.println(e);
+                }
+            }
+        }
+        return byteArray.getBytes();
+    }
 }
