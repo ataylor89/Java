@@ -3,6 +3,7 @@ public class Symbol {
     private String name;
     private String value;
     private byte[] bytes;
+    private String hexstring;
 
     public Symbol() {}
         
@@ -35,8 +36,16 @@ public class Symbol {
         return bytes;
     }
 
+    public void setHexString(String hexstring) {
+        this.hexstring = hexstring;
+    }
+
+    public String getHexString() {
+        return hexstring;
+    }
+
     @Override
     public String toString() {
-        return name + ": " + value;
+        return name + ":\t" + value + "\t" + hexstring;
     }
 }

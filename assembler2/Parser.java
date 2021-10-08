@@ -253,6 +253,16 @@ public class Parser {
 		return bytes;
 	} 
 
+    public String hexstring(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < bytes.length; i++) {
+            sb.append(String.format("%x", bytes[i]));
+            if (i < bytes.length - 1)
+                sb.append(" ");
+        }
+        return sb.toString();
+    }
+
     public SymbolTable parseSymbols(String code) {
         SymbolTable symbolTable = new SymbolTable();
         String[] dataDirectives = parseDataDirectives(code);
@@ -265,7 +275,10 @@ public class Parser {
                     String label = parseLabel(tokens[0]);
                     symbol.setName(label);
                     symbol.setValue(tokens[2]);
-                    symbol.setBytes(parseDb(dataDirectives[i]));
+                    byte[] bytes = parseDb(dataDirectives[i]);
+                    symbol.setBytes(bytes);
+                    String hexstring = hexstring(bytes);
+                    symbol.setHexString(hexstring);
                     symbolTable.getList().add(symbol);
                     symbolTable.getMap().put(label, symbol);
                     break;
