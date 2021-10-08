@@ -9,6 +9,11 @@ public class ByteArray {
         index = 0;
     }
 
+    public ByteArray(int capacity) {
+        bytes = new byte[capacity];
+        index = 0;
+    }
+
     public void resize(int amount) {
         byte[] b = new byte[bytes.length + amount];
         for (int i = 0; i < bytes.length; i++)

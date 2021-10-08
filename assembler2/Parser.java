@@ -144,7 +144,7 @@ public class Parser {
         if (end < 0)
             end = text.length();
         while (start > 0 && end > start) {
-            String instruction = text.substring(start, end);
+            String instruction = text.substring(start, end).trim();
             lst.add(instruction);
             start = end + 1;
             end = text.indexOf("\n", start);
@@ -201,13 +201,16 @@ public class Parser {
         return bssDirectives;
     }
  
-    public Opcode parseOpcode(String opcode) {
-        if (!opcodes.containsKey(opcode))
+    public Opcode parseOpcode(String instruction) {
+        String[] tokens = instruction.split("\\s+", 3);
+        if (!opcodes.containsKey(tokens[0]))
             return null;
-        return opcodes.get(opcode);
+        return opcodes.get(tokens[0]);
     }
 
     public Operand parseOperand(String operand, SymbolTable symbolTable) {
+        if (operand.endsWith(","))
+            operand = operand.substring(0, operand.length()-1);
         if (registers.containsKey(operand))
             return Operand.REGISTER;
         if (symbolTable.getMap().containsKey(operand))
@@ -228,6 +231,8 @@ public class Parser {
     }
 
     public Register parseRegister(String register) {
+        if (register.endsWith(","))
+            register = register.substring(0, register.length()-1);
         if (!registers.containsKey(register)) 
             return null;
         return registers.get(register);
@@ -265,6 +270,7 @@ public class Parser {
 
     public SymbolTable parseSymbols(String code) {
         SymbolTable symbolTable = new SymbolTable();
+        int offset = 0;
         String[] dataDirectives = parseDataDirectives(code);
         for (int i = 0; i < dataDirectives.length; i++) {
             String[] tokens = dataDirectives[i].split("\\s+", 3);
@@ -283,6 +289,8 @@ public class Parser {
                     symbol.setBytes(bytes);
                     hexstring = hexstring(bytes);
                     symbol.setHexString(hexstring);
+                    symbol.setOffset(offset);
+                    offset += bytes.length;
                     symbolTable.getList().add(symbol);
                     symbolTable.getMap().put(label, symbol);
                     break;
@@ -295,6 +303,8 @@ public class Parser {
                     symbol.setBytes(bytes);
                     hexstring = hexstring(bytes);
                     symbol.setHexString(hexstring);
+                    symbol.setOffset(offset);
+                    offset += bytes.length;
                     symbolTable.getList().add(symbol);
                     symbolTable.getMap().put(label, symbol);
                     break;
@@ -360,6 +370,43 @@ public class Parser {
         }
         return new byte[] {};
     }   
+
+    public byte[] parseInstruction(String instruction, SymbolTable symbolTable) {
+        Opcode opcode = parseOpcode(instruction);
+        if (opcode == null)
+            return new byte[] {};
+        switch (opcode) {
+            case MOV:
+                return parseMov(instruction, symbolTable);
+            default:
+                System.err.println("Unknown opcode: " + instruction);
+                return new byte[] {};
+        }
+    }
+
+    public byte[] parseMov(String instruction, SymbolTable symbolTable) {
+        ByteArray byteArray = new ByteArray();
+        String[] tokens = instruction.split("\\s+", 3);
+        Operand op1 = parseOperand(tokens[1], symbolTable);
+        Operand op2 = parseOperand(tokens[2], symbolTable);
+        switch (op1) {
+            case REGISTER:
+                Register register = parseRegister(tokens[1]);
+                byteArray.addBytes(register.getBytes());
+                break;
+        }
+        switch (op2) {
+            case IMMEDIATE_VALUE:
+                byte[] number = parseImmediateValue(tokens[2]);
+                byteArray.addBytes(number);
+                break;
+            case SYMBOL:
+                Symbol symbol = symbolTable.getMap().get(tokens[2]);
+                byteArray.addBytes(littleendian(symbol.getOffset()));
+                break;
+        }
+        return byteArray.getBytes();
+    } 
 
     public static void main(String[] args) {
         File file = new File(args[0]);

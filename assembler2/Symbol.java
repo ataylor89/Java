@@ -4,6 +4,7 @@ public class Symbol {
     private String value;
     private byte[] bytes;
     private String hexstring;
+    private int offset;
 
     public Symbol() {}
         
@@ -42,6 +43,14 @@ public class Symbol {
 
     public String getHexString() {
         return hexstring;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getOffset() {
+        return offset;
     }
 
     @Override
