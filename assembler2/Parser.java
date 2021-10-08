@@ -217,15 +217,14 @@ public class Parser {
     }
 
     public Directive parseDirectiveType(String type) {
-        if (directives.containsKey(type))
-            return directives.get(type);
-        return null;
+        if (!directives.containsKey(type))
+            return null;
+        return directives.get(type);
     }
 
     public Register parseRegister(String register) {
         if (!registers.containsKey(register)) 
             return null;
-
         return registers.get(register);
     }
 
