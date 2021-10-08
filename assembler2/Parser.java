@@ -269,15 +269,31 @@ public class Parser {
         for (int i = 0; i < dataDirectives.length; i++) {
             String[] tokens = dataDirectives[i].split("\\s+", 3);
             Directive directive = parseDirectiveType(tokens[1]); 
+            Symbol symbol = null;
+            String label = null;
+            byte[] bytes = null;
+            String hexstring = null;
             switch (directive) {
                 case DB:
-                    Symbol symbol = new Symbol();
-                    String label = parseLabel(tokens[0]);
+                    symbol = new Symbol();
+                    label = parseLabel(tokens[0]);
                     symbol.setName(label);
                     symbol.setValue(tokens[2]);
-                    byte[] bytes = parseDb(dataDirectives[i]);
+                    bytes = parseDb(dataDirectives[i]);
                     symbol.setBytes(bytes);
-                    String hexstring = hexstring(bytes);
+                    hexstring = hexstring(bytes);
+                    symbol.setHexString(hexstring);
+                    symbolTable.getList().add(symbol);
+                    symbolTable.getMap().put(label, symbol);
+                    break;
+                case EQU:
+                    symbol = new Symbol();
+                    label = parseLabel(tokens[0]);
+                    symbol.setName(label);
+                    symbol.setValue(tokens[2]);
+                    bytes = parseEqu(dataDirectives[i], symbolTable);
+                    symbol.setBytes(bytes);
+                    hexstring = hexstring(bytes);
                     symbol.setHexString(hexstring);
                     symbolTable.getList().add(symbol);
                     symbolTable.getMap().put(label, symbol);
@@ -317,6 +333,33 @@ public class Parser {
         }
         return byteArray.getBytes();
     }
+
+    public byte[] parseEqu(String directive, SymbolTable symbolTable) {
+        String[] tokens = directive.split("\\s+", 3);
+        String label = tokens[0];
+        String value = tokens[2];
+        if (value.startsWith("$-")) {
+            String name = value.substring(2);
+            byte[] bytes = symbolTable.getMap().get(name).getBytes();
+            int val = bytes.length;
+            return littleendian(val);
+        }
+        if (value.startsWith("'") && value.endsWith("'")) {
+            String charConstant = value.substring(1, value.length()-1);
+            return charConstant.getBytes();
+        }
+        if (value.startsWith("\"") && value.endsWith("\"")) {
+            String stringConstant = value.substring(1, value.length()-1);
+            return stringConstant.getBytes();
+        }
+        try {
+            Long num = Long.decode(value);
+            return littleendian(num);
+        } catch (NumberFormatException e) {
+            System.err.println(e);
+        }
+        return new byte[] {};
+    }   
 
     public static void main(String[] args) {
         File file = new File(args[0]);
