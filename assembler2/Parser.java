@@ -378,6 +378,10 @@ public class Parser {
         switch (opcode) {
             case MOV:
                 return parseMov(instruction, symbolTable);
+            case XOR:
+                return parseXor(instruction, symbolTable);
+            case SYSCALL:
+                return new byte[] {(byte) 0x0f, (byte) 0x05};
             default:
                 System.err.println("Unknown opcode: " + instruction);
                 return new byte[] {};
@@ -407,6 +411,25 @@ public class Parser {
         }
         return byteArray.getBytes();
     } 
+
+    public byte[] parseXor(String instruction, SymbolTable symbolTable){
+        String[] tokens = instruction.split("\\s+", 3);
+        Operand op1 = parseOperand(tokens[1], symbolTable);
+        Operand op2 = parseOperand(tokens[2], symbolTable);
+        if (op1 == Operand.REGISTER && op2 == Operand.REGISTER) {
+            Register r1 = parseRegister(tokens[1]);
+            Register r2 = parseRegister(tokens[2]);
+            if (r1 == Register.RAX && r2 == Register.RAX) 
+               return new byte[] {(byte) 0x48, (byte) 0x31, (byte) 0xc0};
+            if (r1 == Register.RDI && r2 == Register.RDI) 
+               return new byte[] {(byte) 0x48, (byte) 0x31, (byte) 0xff};
+            if (r1 == Register.RSI && r2 == Register.RSI)
+               return new byte[] {(byte) 0x48, (byte) 0x31, (byte) 0xf6};
+            if (r1 == Register.RDX && r2 == Register.RDX)
+               return new byte[] {(byte) 0x48, (byte) 0x31, (byte) 0xd2};
+        }
+        return new byte[] {};
+    }
 
     public static void main(String[] args) {
         File file = new File(args[0]);
