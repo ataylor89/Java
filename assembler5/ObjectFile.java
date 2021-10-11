@@ -40,10 +40,10 @@ public class ObjectFile {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Object file\n");
-        sb.append("Code section\n");
+        sb.append(String.format("Code section (%02x bytes)\n", codeSection.getBytes().length));
         sb.append(Bytes.hexstring(codeSection.getBytes()));
         sb.append("\n");
-        sb.append("Data section\n");
+        sb.append(String.format("Data section (%02x bytes)\n", dataSection.getBytes().length));
         sb.append(Bytes.hexstring(dataSection.getBytes()));
         sb.append("\n");
         sb.append("Symbol table\n");

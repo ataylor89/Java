@@ -82,9 +82,8 @@ public class Assembler {
             Object value = symbols.get(operand2);
             if (value instanceof Long) {
                 Long num = (Long) value;
-                int size = (num > 0xFFFFFFFFL) ? 8 : 4;
-                codeSection.addBytes(getMovCode(register, size));
-                codeSection.addBytes(Bytes.littleendian(num, size));
+                codeSection.addBytes(getMovCode(register, 8));
+                codeSection.addBytes(Bytes.littleendian(num, 8));
             }
             if (value instanceof Integer) {
                 Integer i = (Integer) value;
@@ -148,6 +147,8 @@ public class Assembler {
     }
 
     public void compileDataSection(String[] directives, ObjectFile objectFile) {
+        ByteArray dataSection = objectFile.getDataSection();
+        Map<String, Object> symbols = objectFile.getSymbols();
         for (int i = 0; i < directives.length; i++) {
             String[] tokens = directives[i].split("\\s+", 3);
             String label = tokens[0];
@@ -162,48 +163,46 @@ public class Assembler {
                 System.err.println(e);
                 continue;
             }
-            int index = objectFile.getDataSection().getIndex();
+            long index = (long) dataSection.getIndex();
             switch (directive) {
                 case DB:
                     String[] constants = data.split(",");
                     for (String constant : constants) {
                         if (constant.startsWith("'") && constant.endsWith("'")) {
                             constant = constant.substring(1, constant.length()-1);
-                            objectFile.getDataSection().addBytes(constant.getBytes());
-                            objectFile.getSymbols().put(label, index);
+                            dataSection.addBytes(constant.getBytes());
                         }
                         else if (constant.startsWith("\"") && constant.endsWith("\"")) {
                             constant = constant.substring(1, constant.length()-1);
-                            objectFile.getDataSection().addBytes(constant.getBytes());
-                            objectFile.getSymbols().put(label, index);
+                            dataSection.addBytes(constant.getBytes());
                         }
                         else {
                             try {
                                 Long num = Long.decode(constant);
                                 int size = Bytes.size(num);
                                 byte[] bytes = Bytes.littleendian(num, size);
-                                objectFile.getDataSection().addBytes(bytes);
-                                objectFile.getSymbols().put(label, index);
+                                dataSection.addBytes(bytes);
                             } catch (NumberFormatException e) {
                                 System.err.println(e);
                             }    
                         }   
-                    } 
+                    }
+                    symbols.put(label, index); 
                     break;
                 case EQU:
                     if (data.startsWith("$-")) {
-                        Integer start = (Integer) objectFile.getSymbols().get(data.substring(2));
-                        byte[] dataSection = objectFile.getDataSection().getBytes();
-                        Integer end = start;
-                        while (end < dataSection.length - 1 && dataSection[end] != 0x00)
+                        int start = ((Long) symbols.get(data.substring(2))).intValue();
+                        byte[] bytes = dataSection.getBytes();
+                        int end = start;
+                        while (end < bytes.length - 1 && bytes[end] != 0x00)
                             end++;
-                        Long value = (long) (end - start + 1);
-                        objectFile.getSymbols().put(label, value);
+                        int value = end - start + 1;
+                        symbols.put(label, value);
                     }
                     else {
                         try {
                             Long value = Long.decode(data);
-                            objectFile.getSymbols().put(label, value);
+                            symbols.put(label, value);
                         } catch (NumberFormatException e) {
                             System.err.println(e);
                         }   
