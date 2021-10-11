@@ -34,7 +34,7 @@ public class Bytes {
     public static String hexstring(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < bytes.length; i++) {
-            sb.append(String.format("%x", bytes[i]));
+            sb.append(String.format("%02x", bytes[i]));
             if (i < bytes.length - 1)
                 sb.append(" ");
         }

@@ -42,6 +42,7 @@ public class ObjectFile {
         sb.append("Object file\n");
         sb.append("Code section\n");
         sb.append(Bytes.hexstring(codeSection.getBytes()));
+        sb.append("\n");
         sb.append("Data section\n");
         sb.append(Bytes.hexstring(dataSection.getBytes()));
         sb.append("\n");
