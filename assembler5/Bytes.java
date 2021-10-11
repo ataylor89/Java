@@ -11,6 +11,16 @@ public class Bytes {
 		return bytes;
 	}
 
+	public static byte[] littleendian(int val) {
+		byte[] bytes = new byte[4];
+		int bitmask = 0xFF;
+		for (int i = 0; i < bytes.length; i++) {
+			bytes[i] = (byte) ((val & bitmask) >> 8*i);  
+            bitmask <<= 8;
+		}
+		return bytes;
+	}
+
 	public static byte[] littleendian(long val, int size) {
 		byte[] bytes = new byte[size];
 		long bitmask = 0xFF;
@@ -19,7 +29,7 @@ public class Bytes {
             bitmask <<= 8;
 		}
 		return bytes;
-	} 
+	}
 
     public static int size(long val) {
         long mask = 0xFF << 8*7;

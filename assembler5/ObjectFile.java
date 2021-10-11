@@ -3,14 +3,24 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 public class ObjectFile {
+    private ByteArray header;
     private ByteArray codeSection;
     private ByteArray dataSection;
     private Map<String, Object> symbols;
 
     public ObjectFile() {
+        header = new ByteArray();
         codeSection = new ByteArray();
         dataSection = new ByteArray();
         symbols = new HashMap<>();
+    }
+
+    public void setHeader(ByteArray header) {
+        this.header = header;
+    }
+
+    public ByteArray getHeader() {
+        return header;
     }
 
     public void setCodeSection(ByteArray codeSection) {
@@ -40,6 +50,9 @@ public class ObjectFile {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Object file\n");
+        sb.append(String.format("Header (%02x bytes)\n", header.getBytes().length));
+        sb.append(Bytes.hexstring(header.getBytes()));
+        sb.append("\n");
         sb.append(String.format("Code section (%02x bytes)\n", codeSection.getBytes().length));
         sb.append(Bytes.hexstring(codeSection.getBytes()));
         sb.append("\n");

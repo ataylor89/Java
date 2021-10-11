@@ -13,13 +13,27 @@ public class Assembler {
     public ObjectFile compile(File file) {
         ObjectFile objectFile = new ObjectFile();
         AssemblyFile assemblyFile = parser.parse(file);
+        compileHeader(assemblyFile, objectFile);
         String[] dataDirectives = assemblyFile.getDataDirectives();
         compileDataSection(dataDirectives, objectFile);
         String[] instructions = assemblyFile.getInstructions();
         compileTextSection(instructions, objectFile);
         return objectFile;
     }
-    
+ 
+    public void compileHeader(AssemblyFile assemblyFile, ObjectFile objectFile){
+        ByteArray header = objectFile.getHeader();
+        header.addBytes(new byte[] {(byte) 0xcf, (byte) 0xfa, (byte) 0xed, (byte) 0xfe}); // magic number
+        header.addBytes(new byte[] {(byte) 0x07, (byte) 0x00, (byte) 0x00, (byte) 0x01}); // cpu specifier
+        header.addBytes(new byte[] {(byte) 0x03, (byte) 0x00, (byte) 0x00, (byte) 0x00}); // cpu subtype specifier
+        header.addBytes(new byte[] {(byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00}); // filetype
+        int numlc = assemblyFile.getSectionCount();
+        header.addBytes(Bytes.littleendian(numlc)); // number of load commands
+        header.addBytes(new byte[] {(byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00}); // size of load command region
+        header.addBytes(new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}); // flags
+        header.addBytes(new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}); // reserved
+    }
+   
     public void compileTextSection(String[] instructions, ObjectFile objectFile) {
         for (int i = 0; i < instructions.length; i++) {
             String[] tokens = instructions[i].split("\\s+", 4);

@@ -84,6 +84,17 @@ public class AssemblyFile {
         return bssDirectives;
     }
 
+    public int getSectionCount() {
+        int num = 0;
+        if (textSection != null)
+            num++;
+        if (dataSection != null)
+            num++;
+        if (bssSection != null)
+            num++;
+        return num;
+    }
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
