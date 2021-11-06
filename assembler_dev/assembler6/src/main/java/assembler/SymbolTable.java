@@ -101,19 +101,17 @@ public class SymbolTable {
         }
         String[] instructions = assemblyFile.getInstructions();
         for (int i = 0; i < instructions.length; i++) {
-            String[] tokens = instructions[i].split("\\s+", 4);
-            if (tokens[0].endsWith(":")) {
-                String label = tokens[0].substring(0, tokens[0].length()-1).trim();
-                if (!map.containsKey(label)) {
-                    Symbol symbol = new Symbol();
-                    symbol.setName(label);
-                    symbol.setIndex(index++);
-                    symbol.setStrx(strx);
-                    strx += label.length() + 1;
-                    symbol.setType(SymbolType.TEXT);
-                    getList().add(symbol);
-                    getMap().put(label, symbol);
-                }
+            Instruction instruction = new Instruction(instructions[i]);
+            String label = instruction.getLabel();
+            if (label != null && !map.containsKey(label)) {
+                Symbol symbol = new Symbol();
+                symbol.setName(label);
+                symbol.setIndex(index++);
+                symbol.setStrx(strx);
+                strx += label.length() + 1;
+                symbol.setType(SymbolType.TEXT);
+                list.add(symbol);
+                map.put(label, symbol);
             }
         }
         String[] directives = assemblyFile.getDataDirectives();
