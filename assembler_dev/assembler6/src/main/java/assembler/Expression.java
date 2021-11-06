@@ -8,8 +8,9 @@ public class Expression {
     
     private String expression;
     private Object value;
-    
-    public Expression(String expression, SymbolTable symbolTable) {
+    private static SymbolTable symbolTable;
+     
+    public Expression(String expression) {
         if (expression != null) {
             this.expression = expression;
             if (symbolTable.isSymbol(expression)) {
@@ -38,7 +39,7 @@ public class Expression {
             }
         }
     }
-
+    
     /**
      * @return the expression
      */
@@ -65,5 +66,9 @@ public class Expression {
      */
     public void setValue(Object value) {
         this.value = value;
+    }
+    
+    public static void setSymbolTable(SymbolTable symbolTable) {
+        Expression.symbolTable = symbolTable;
     }
 }

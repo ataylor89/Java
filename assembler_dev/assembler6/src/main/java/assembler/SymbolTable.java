@@ -88,7 +88,8 @@ public class SymbolTable {
         this.offset = offset;
     }
             
-    private void init(AssemblyFile assemblyFile) {      
+    private void init(AssemblyFile assemblyFile) {
+        Expression.setSymbolTable(this);
         int index = 0;
         int strx = 1;
         for (String extern : assemblyFile.getExterns()) {
@@ -143,14 +144,14 @@ public class SymbolTable {
             strx += label.length() + 1;
             switch (opcode) {
                 case DB:
-                    String value = (String) new Expression(operand, this).getValue();
+                    String value = (String) new Expression(operand).getValue();
                     symbol.setValue((long) offset);
                     symbol.setSize(value.length());
                     symbol.setType(SymbolType.DATA);
                     offset += value.length();
                     break;
                 case EQU:
-                    Integer num = (Integer) new Expression(operand, this).getValue();
+                    Integer num = (Integer) new Expression(operand).getValue();
                     symbol.setValue(num.longValue());
                     symbol.setType(SymbolType.ABSOLUTE);
                     break;

@@ -131,8 +131,8 @@ public class Assembler {
             Opcode opcode = Opcode.parse(instruction.getOpcode());
             String operand1 = instruction.getOperand1();
             String operand2 = instruction.getOperand2();
-            Object op1 = new Expression(operand1, symbolTable).getValue();
-            Object op2 = new Expression(operand2, symbolTable).getValue();
+            Object op1 = new Expression(operand1).getValue();
+            Object op2 = new Expression(operand2).getValue();
             switch (opcode) {
                 case MOV -> {
                     if (op1 instanceof Register && op2 instanceof Long) {
@@ -176,7 +176,7 @@ public class Assembler {
             Symbol symbol = symbolTable.getMap().get(label);
             switch (opcode) {
                 case DB -> {
-                    String value = (String) new Expression(operand, symbolTable).getValue();
+                    String value = (String) new Expression(operand).getValue();
                     dataSection.addBytes(value.getBytes());
                 }
             }       
