@@ -15,12 +15,10 @@ public class SymbolTable {
     
     private List<Symbol> list;
     private Map<String, Symbol> map;
-    private int offset;
     
     private SymbolTable() {
         list = new ArrayList<>();
         map = new HashMap<>();
-        offset = 0;
     }
     
     public SymbolTable(File file) {
@@ -73,25 +71,12 @@ public class SymbolTable {
     public void setMap(Map<String, Symbol> map) {
         this.map = map;
     }
-
-    /**
-     * @return the offset
-     */
-    public int getOffset() {
-        return offset;
-    }
-
-    /**
-     * @param offset the offset to set
-     */
-    public void setOffset(int offset) {
-        this.offset = offset;
-    }
             
     private void init(AssemblyFile assemblyFile) {
         Expression.setSymbolTable(this);
         int index = 0;
         int strx = 1;
+        int offset = 0;
         for (String extern : assemblyFile.getExterns()) {
             Symbol symbol = new Symbol();
             String name = extern.split("\\s+")[1].trim();
