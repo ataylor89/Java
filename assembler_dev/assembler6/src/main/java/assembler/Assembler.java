@@ -7,17 +7,15 @@ public class Assembler {
     
     private AssemblyFile assemblyFile;
     private ObjectFile objectFile;
-    private SymbolTable symbolTable;
 
     public Assembler(File src) {
         Parser parser = new Parser();
         assemblyFile = parser.parse(src);
         objectFile = new ObjectFile();
-        symbolTable = new SymbolTable();
     }
 
     public ObjectFile assemble() {
-        symbolTable.init(assemblyFile);
+        Symbols.init(assemblyFile);
         objectFile.setDataSection(assembleDataSection());
         objectFile.setTextSection(assembleTextSection());
         objectFile.setHeader(assembleHeader());
@@ -109,9 +107,9 @@ public class Assembler {
         byte[] ds = objectFile.getDataSection();       
         int padding = 8 - (ts.length % 8) + 8 - (ds.length % 8);
         int symOffset = 0x120 + ts.length + ds.length + padding + 8;
-        int numSymbols = symbolTable.getList().size();
+        int numSymbols = Symbols.list.size();
         int strOffset = symOffset + numSymbols * 0x10;
-        int strSize = symbolTable.getStringTable().length();
+        int strSize = Symbols.stringTable.length();
         ByteArray lcSymtab = new ByteArray();
         lcSymtab.addDWord(0x02);                    // cmd
         lcSymtab.addDWord(0x18);                    // cmd size
@@ -130,8 +128,8 @@ public class Assembler {
             Opcode opcode = Opcode.parse(instruction.getOpcode());
             String operand1 = instruction.getOperand1();
             String operand2 = instruction.getOperand2();
-            Object op1 = eval(operand1);
-            Object op2 = eval(operand2);
+            Object op1 = Expressions.eval(operand1);
+            Object op2 = Expressions.eval(operand2);
             switch (opcode) {
                 case MOV -> {
                     if (op1 instanceof Register && op2 instanceof Long) {
@@ -170,23 +168,11 @@ public class Assembler {
         for (String text : directives) {
             DataDirective directive = new DataDirective(text);
             Pseudoopcode opcode = Pseudoopcode.parse(directive.getOpcode());
-            String label = directive.getLabel();
             String operand = directive.getOperand();
-            Symbol symbol = symbolTable.getMap().get(label);
             switch (opcode) {
                 case DB -> {
-                    String value = (String) eval(operand);
+                    String value = (String) Expressions.eval(operand);
                     dataSection.addBytes(value.getBytes());
-                    int offset = symbolTable.getOffset();
-                    symbol.setValue((long) offset);
-                    symbol.setSize(value.length());
-                    symbol.setType(SymbolType.DATA);
-                    symbolTable.setOffset(offset + value.length());
-                }
-                case EQU -> {
-                    Integer num = (Integer) eval(operand);
-                    symbol.setValue(num.longValue());
-                    symbol.setType(SymbolType.ABSOLUTE);
                 }
             }       
         }
@@ -195,12 +181,11 @@ public class Assembler {
         
     public byte[] assembleSymbolTable() {
         ByteArray symSection = new ByteArray();
-        List<Symbol> symbols = symbolTable.getList();
-        symbols.sort(SymbolTable.SortOrders.symTable);
+        Symbols.list.sort(Symbols.SortOrders.symTable);
         int offset = objectFile.getTextSection().length;
         symSection.addDWord(0x0c, Endian.LITTLE);
         symSection.addDWord(0x0e, Endian.BIG);
-        for (Symbol symbol : symbols) {      
+        for (Symbol symbol : Symbols.list) {      
             long value = symbol.getValue();
             symSection.addDWord(symbol.getStrx());
             switch (symbol.getType()) {
@@ -230,40 +215,10 @@ public class Assembler {
                 }
             }
         }
-        symSection.addBytes(symbolTable.getStringTable().getBytes());
+        symSection.addBytes(Symbols.stringTable.getBytes());
         return symSection.getBytes();
     }
-    
-    public Object eval(String expression) {
-        if (expression == null)
-            return null;
-        else if (symbolTable.isSymbol(expression)) {
-            Symbol symbol = symbolTable.getMap().get(expression);
-            if (symbol.getType() == SymbolType.ABSOLUTE)
-                return (int) symbol.getValue();
-            else
-                return symbol.getValue();
-        }
-        else if (Register.isRegister(expression))
-            return Register.parse(expression);
-        else if (StringConstant.isStringConstant(expression))
-            return new StringConstant(expression).getValue();
-        else if (expression.startsWith("$-")) 
-            return symbolTable.getMap().get(expression.substring(2, expression.length())).getSize();
-        else {
-            try {
-                Long l = Long.decode(expression);
-                if (l > Integer.MAX_VALUE)
-                    return l;
-                else
-                    return Integer.decode(expression);
-            } catch (NumberFormatException e) {
-                System.err.println(e);
-                return null;
-            }
-        }
-    }
-    
+        
     public void writeToFile(ObjectFile objectFile, File dest) {
         try (FileOutputStream fos = new FileOutputStream(dest)) {  
             fos.write(objectFile.getBytes());
