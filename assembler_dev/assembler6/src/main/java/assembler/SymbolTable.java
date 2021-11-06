@@ -1,5 +1,6 @@
 package assembler;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,12 +16,23 @@ public class SymbolTable {
     private List<Symbol> list;
     private Map<String, Symbol> map;
     private int offset;
-    private String stringTable;
     
-    public SymbolTable() {
+    private SymbolTable() {
         list = new ArrayList<>();
         map = new HashMap<>();
         offset = 0;
+    }
+    
+    public SymbolTable(File file) {
+        this();
+        Parser parser = new Parser();
+        AssemblyFile assemblyFile = parser.parse(file);
+        init(assemblyFile);
+    }
+    
+    public SymbolTable(AssemblyFile assemblyFile) {
+        this();
+        init(assemblyFile);
     }
     
     class SortOrders {
@@ -75,22 +87,8 @@ public class SymbolTable {
     public void setOffset(int offset) {
         this.offset = offset;
     }
-
-    /**
-     * @return the stringTable
-     */
-    public String getStringTable() {
-        return stringTable;
-    }
-
-    /**
-     * @param stringTable the stringTable to set
-     */
-    public void setStringTable(String stringTable) {
-        this.stringTable = stringTable;
-    }
             
-    public void init(AssemblyFile assemblyFile) {      
+    private void init(AssemblyFile assemblyFile) {      
         int index = 0;
         int strx = 1;
         for (String extern : assemblyFile.getExterns()) {
@@ -134,31 +132,33 @@ public class SymbolTable {
         }
         String[] directives = assemblyFile.getDataDirectives();
         for (int i = 0; i < directives.length; i++) {
-            String[] tokens = directives[i].split("\\s+", 4);
-            if (tokens[0].endsWith(":")) {
-                String label = tokens[0].substring(0, tokens[0].length()-1).trim();
-                if (!map.containsKey(label)) {
-                    Symbol symbol = new Symbol();
-                    symbol.setName(label);
-                    symbol.setIndex(index++);
-                    symbol.setStrx(strx);
-                    strx += label.length() + 1;
-                    if (tokens[1].equals("db"))
-                        symbol.setType(SymbolType.DATA);
-                    else if (tokens[1].equals("equ"))
-                        symbol.setType(SymbolType.ABSOLUTE);
-                    getList().add(symbol);
-                    getMap().put(label, symbol);
-                }
+            DataDirective directive = new DataDirective(directives[i]);
+            Pseudoopcode opcode = Pseudoopcode.parse(directive.getOpcode());
+            String label = directive.getLabel();
+            String operand = directive.getOperand();  
+            Symbol symbol = new Symbol();
+            symbol.setName(label);
+            symbol.setIndex(index++);
+            symbol.setStrx(strx);
+            strx += label.length() + 1;
+            switch (opcode) {
+                case DB:
+                    String value = (String) new Expression(operand, this).getValue();
+                    symbol.setValue((long) offset);
+                    symbol.setSize(value.length());
+                    symbol.setType(SymbolType.DATA);
+                    offset += value.length();
+                    break;
+                case EQU:
+                    Integer num = (Integer) new Expression(operand, this).getValue();
+                    symbol.setValue(num.longValue());
+                    symbol.setType(SymbolType.ABSOLUTE);
+                    break;
+                    
             }
+            list.add(symbol);
+            map.put(label, symbol);
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append('\0');
-        for (Symbol symbol : getList()) {
-            sb.append(symbol.getName());
-            sb.append('\0');
-        }
-        setStringTable(sb.toString());
     }
     
     public boolean isSymbol(String expression) {
