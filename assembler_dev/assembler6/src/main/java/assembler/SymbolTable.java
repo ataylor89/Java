@@ -16,7 +16,7 @@ public class SymbolTable {
     private List<Symbol> list;
     private Map<String, Symbol> map;
     
-    private SymbolTable() {
+    public SymbolTable() {
         list = new ArrayList<>();
         map = new HashMap<>();
     }
@@ -72,8 +72,10 @@ public class SymbolTable {
         this.map = map;
     }
             
-    private void init(AssemblyFile assemblyFile) {
+    public void init(AssemblyFile assemblyFile) {
         Expression.setSymbolTable(this);
+        list.clear();
+        map.clear();
         int index = 0;
         int strx = 1;
         int offset = 0;
