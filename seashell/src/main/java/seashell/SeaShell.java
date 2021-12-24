@@ -59,10 +59,9 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
         private Process bash;
         private PrintWriter writer;
         private BufferedReader reader;
-        private Map<String, Long> timeouts; 
+        private final long TIMEOUT_INTERVAL = 2000L;
         
         public Interpreter() {
-            initTimeouts();
             ProcessBuilder pb = new ProcessBuilder("/bin/bash");
             try {
                 bash = pb.start();
@@ -72,21 +71,10 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
                 logger.log(Level.SEVERE, e.toString());
             }
         }
-        
-        private void initTimeouts() {
-            timeouts = new HashMap<>();
-            timeouts.put("git status", 5000L);
-            timeouts.put("git commit", 60000L);
-            timeouts.put("git push", 60000L);
-        }
 
         public void interpret(String program, SeaShellTab display) {
             Thread thread = new Thread(new Runnable() {
                 public void run() {
-                    long timeoutInterval = 2000;
-                    for (String key : timeouts.keySet())
-                        if (program.startsWith(key))
-                            timeoutInterval = timeouts.get(key);
                     writer.println(program);
                     boolean timeout = false;
                     while (!timeout) {
@@ -94,12 +82,11 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
                             long start = System.currentTimeMillis();
                             while (!reader.ready() && !timeout) {
                                 long time = System.currentTimeMillis();
-                                if (time - start > timeoutInterval) 
+                                if (time - start > TIMEOUT_INTERVAL) 
                                     timeout = true;
                             }
-                            if (reader.ready()) {
+                            while (reader.ready()) {
                                 display.append(reader.readLine() + "\n");
-                                timeout = false;
                             }
                         } catch (IOException ex) {
                             logger.log(Level.WARNING, ex.toString());
