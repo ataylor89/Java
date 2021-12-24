@@ -59,9 +59,10 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
         private Process bash;
         private PrintWriter writer;
         private BufferedReader reader;
-        private final long timeoutInterval = 2000; // milliseconds
+        private Map<String, Long> timeouts; 
         
         public Interpreter() {
+            initTimeouts();
             ProcessBuilder pb = new ProcessBuilder("/bin/bash");
             try {
                 bash = pb.start();
@@ -71,10 +72,21 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
                 logger.log(Level.SEVERE, e.toString());
             }
         }
+        
+        private void initTimeouts() {
+            timeouts = new HashMap<>();
+            timeouts.put("git status", 5000L);
+            timeouts.put("git commit", 60000L);
+            timeouts.put("git push", 60000L);
+        }
 
         public void interpret(String program, SeaShellTab display) {
             Thread thread = new Thread(new Runnable() {
                 public void run() {
+                    long timeoutInterval = 2000;
+                    for (String key : timeouts.keySet())
+                        if (program.startsWith(key))
+                            timeoutInterval = timeouts.get(key);
                     writer.println(program);
                     boolean timeout = false;
                     while (!timeout) {
