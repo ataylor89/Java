@@ -32,11 +32,9 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     private class SeaShellTab extends JTextArea {
 
         private String title;
-        private File currentDirectory;
 
         public SeaShellTab(String title) {
             this.title = title;
-            currentDirectory = new File(System.getProperty("user.home"));
         }
 
         public void setTitle(String title) {
@@ -45,14 +43,6 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
 
         public String getTitle() {
             return title;
-        }
-
-        public void setCurrentDirectory(File currentDirectory) {
-            this.currentDirectory = currentDirectory;
-        }
-
-        public File getCurrentDirectory() {
-            return currentDirectory;
         }
     }
 
