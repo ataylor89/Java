@@ -16,6 +16,8 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     private JMenuItem newTab, closeTab, saveFile, openFile, exit;
     private JMenu colors;
     private JMenuItem setForegroundColor, setBackgroundColor, blackwhite, graywhite, grayblue, tealwhite, purplewhite, whiteblack, whitegray, bluegray, whiteteal, whitepurple;
+    private JMenu settings;
+    private JMenuItem setTimeout;
     private JPanel panel;
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
@@ -59,7 +61,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
         private Process bash;
         private PrintWriter writer;
         private BufferedReader reader;
-        private final long TIMEOUT = 2000L;
+        private long timeout = 2000L;
         
         public Interpreter() {
             ProcessBuilder pb = new ProcessBuilder("/bin/bash");
@@ -75,12 +77,13 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
         public void interpret(String program, SeaShellTab display) {
             Thread thread = new Thread(new Runnable() {
                 public void run() {
+                    logger.info("Timeout length: " + timeout);
                     writer.println(program);
                     try {
                         long start = System.currentTimeMillis();
                         while (!reader.ready()) {
                             long time = System.currentTimeMillis();
-                            if (time - start > TIMEOUT) 
+                            if (time - start > timeout) 
                                 break;
                         }
                         while (reader.ready()) {
@@ -94,6 +97,14 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
                 }
             });
             thread.start();
+        }
+        
+        public void setTimeout(long timeout) {
+            this.timeout = timeout;
+        }
+        
+        public long getTimeout() {
+            return timeout;
         }
     }
 
@@ -172,8 +183,13 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
         colors.add(grayblue);
         colors.add(tealwhite);
         colors.add(purplewhite);
+        settings = new JMenu("Settings");
+        setTimeout = new JMenuItem("Set timeout length");
+        setTimeout.addActionListener(this);
+        settings.add(setTimeout);
         menuBar.add(file);
         menuBar.add(colors);
+        menuBar.add(settings);
         setJMenuBar(menuBar);
         tabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
         panel = new JPanel();
@@ -315,6 +331,17 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
             setColors(teal, Color.WHITE);
         } else if (e.getSource() == purplewhite) {
             setColors(purple, Color.WHITE);
+        } else if (e.getSource() == setTimeout) {
+            try {
+                String msg = String.format("The current timeout length is %d.\nSet a new timeout length:", interpreter.getTimeout());
+                Long timeout = Long.parseLong(JOptionPane.showInputDialog(this, msg, "Set timeout length", JOptionPane.QUESTION_MESSAGE));
+                if (timeout > 0 && timeout <= 60000) {
+                    interpreter.setTimeout(timeout);
+                    logger.info("Set timeout length to " + timeout);
+                }
+            } catch (NumberFormatException ex) {
+                logger.log(Level.WARNING, ex.toString());
+            }
         }
     }
 
