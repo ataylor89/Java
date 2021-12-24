@@ -17,6 +17,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     private JMenu colors;
     private JMenuItem setForegroundColor, setBackgroundColor, blackwhite, graywhite, grayblue, tealwhite, purplewhite, whiteblack, whitegray, bluegray, whiteteal, whitepurple;
     private JMenu settings;
+    private JMenuItem setTitle;
     private JMenuItem setTimeout;
     private JPanel panel;
     private JTabbedPane tabbedPane;
@@ -28,23 +29,6 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     private final Color blue = new Color(0, 0, 204, 255);
     private Interpreter interpreter;
     private Logger logger;
-
-    private class SeaShellTab extends JTextArea {
-
-        private String title;
-
-        public SeaShellTab(String title) {
-            this.title = title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-    }
 
     private class Interpreter {
 
@@ -64,7 +48,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
             }
         }
 
-        public void interpret(String program, SeaShellTab display) {
+        public void interpret(String program, JTextArea display) {
             Thread thread = new Thread(new Runnable() {
                 public void run() {
                     logger.info("Timeout length: " + timeout);
@@ -174,8 +158,11 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
         colors.add(tealwhite);
         colors.add(purplewhite);
         settings = new JMenu("Settings");
+        setTitle = new JMenuItem("Set tab title");
+        setTitle.addActionListener(this);
         setTimeout = new JMenuItem("Set timeout length");
         setTimeout.addActionListener(this);
+        settings.add(setTitle);
         settings.add(setTimeout);
         menuBar.add(file);
         menuBar.add(colors);
@@ -256,7 +243,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     public void keyReleased(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
             JScrollPane scrollPane = (JScrollPane) tabbedPane.getSelectedComponent();
-            SeaShellTab seaShellTab = (SeaShellTab) scrollPane.getViewport().getView();
+            JTextArea seaShellTab = (JTextArea) scrollPane.getViewport().getView();
             int offset = seaShellTab.getCaretPosition();
             try {
                 int lineNumber = seaShellTab.getLineOfOffset(offset) - 1;
@@ -274,7 +261,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == newTab) {
             String title = JOptionPane.showInputDialog(this, "Title:", "New tab", JOptionPane.QUESTION_MESSAGE);
-            SeaShellTab seaShellTab = new SeaShellTab(title);
+            JTextArea seaShellTab = new JTextArea();
             seaShellTab.append("& ");
             seaShellTab.addKeyListener(this);
             JScrollPane scrollPane = new JScrollPane(seaShellTab);
@@ -321,6 +308,13 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
             setColors(teal, Color.WHITE);
         } else if (e.getSource() == purplewhite) {
             setColors(purple, Color.WHITE);
+        } else if (e.getSource() == setTitle) {
+            int index = tabbedPane.getSelectedIndex();
+            if (index >= 0) {
+                String title = JOptionPane.showInputDialog(this, "Set tab title: ", "Set tab title", JOptionPane.QUESTION_MESSAGE);
+                if (title.trim().length() > 0)
+                    tabbedPane.setTitleAt(index, title);
+            }
         } else if (e.getSource() == setTimeout) {
             try {
                 String msg = String.format("The current timeout length is %d.\nSet a new timeout length:", interpreter.getTimeout());
