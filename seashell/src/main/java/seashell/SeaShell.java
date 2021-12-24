@@ -59,7 +59,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
         private Process bash;
         private PrintWriter writer;
         private BufferedReader reader;
-        private final long TIMEOUT_INTERVAL = 2000L;
+        private final long TIMEOUT = 2000L;
         
         public Interpreter() {
             ProcessBuilder pb = new ProcessBuilder("/bin/bash");
@@ -76,21 +76,18 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
             Thread thread = new Thread(new Runnable() {
                 public void run() {
                     writer.println(program);
-                    boolean timeout = false;
-                    while (!timeout) {
-                        try {
-                            long start = System.currentTimeMillis();
-                            while (!reader.ready() && !timeout) {
-                                long time = System.currentTimeMillis();
-                                if (time - start > TIMEOUT_INTERVAL) 
-                                    timeout = true;
-                            }
-                            while (reader.ready()) {
-                                display.append(reader.readLine() + "\n");
-                            }
-                        } catch (IOException ex) {
-                            logger.log(Level.WARNING, ex.toString());
+                    try {
+                        long start = System.currentTimeMillis();
+                        while (!reader.ready()) {
+                            long time = System.currentTimeMillis();
+                            if (time - start > TIMEOUT) 
+                                break;
                         }
+                        while (reader.ready()) {
+                            display.append(reader.readLine() + "\n");
+                        }
+                    } catch (IOException ex) {
+                        logger.log(Level.WARNING, ex.toString());
                     }
                     display.append("& ");
                     display.setCaretPosition(display.getText().length());
