@@ -5,8 +5,6 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.*;
-import java.util.stream.*;
 import java.util.logging.*;
 
 public class SeaShell extends JFrame implements KeyListener, ActionListener {
@@ -17,8 +15,7 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     private JMenu colors;
     private JMenuItem setForegroundColor, setBackgroundColor, blackwhite, graywhite, grayblue, tealwhite, purplewhite, whiteblack, whitegray, bluegray, whiteteal, whitepurple;
     private JMenu settings;
-    private JMenuItem setTitle;
-    private JMenuItem setTimeout;
+    private JMenuItem setTitle, setStarter;
     private JPanel panel;
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
@@ -27,64 +24,107 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     private final Color teal = new Color(0, 153, 153, 255);
     private final Color gray = new Color(204, 204, 204, 255);
     private final Color blue = new Color(0, 0, 204, 255);
-    private Interpreter interpreter;
     private Logger logger;
 
-    private class Interpreter {
-
-        private Process bash;
-        private PrintWriter writer;
-        private BufferedReader reader;
-        private long timeout = 2000L;
+    private class SeaShellTab extends JTextArea {
+        private Interpreter interpreter;
+        private String startingText = "& ";
+        private int previousCaretPosition;
         
-        public Interpreter() {
+        public SeaShellTab() {
+            interpreter = new Interpreter(this);
+        }
+        
+        public void setInterpreter(Interpreter interpreter) {
+            this.interpreter = interpreter;
+        }
+        
+        public Interpreter getInterpreter() {
+            return interpreter;
+        }
+        
+        public void setPreviousCaretPosition(int previousCaretPosition) {
+            this.previousCaretPosition = previousCaretPosition;
+        }
+        
+        public int getPreviousCaretPosition() {
+            return previousCaretPosition;
+        }
+        
+        @Override
+        public void append(String text) {
+            super.append(text);
+            setCaretPosition(getText().length());
+            setPreviousCaretPosition(getText().length());
+        }
+        
+        public void setStartingText(String startingText) {
+            this.startingText = startingText;
+        }
+        
+        public String getStartingText() {
+            return startingText;
+        }
+        
+        public void startNewLine() {
+            if (startingText != null & startingText.length() > 0)
+                append(startingText);
+        }
+    }
+    
+    private class Interpreter {
+        private SeaShellTab display;
+        private Process bash;
+        
+        public Interpreter(SeaShellTab display) {
+            this.display = display;
+            init();
+        }
+        
+        private void init() {
             ProcessBuilder pb = new ProcessBuilder("/bin/bash");
             try {
                 bash = pb.start();
-                writer = new PrintWriter(bash.getOutputStream(), true);
-                reader = new BufferedReader(new InputStreamReader(bash.getInputStream()));
+                read();
             } catch (IOException e) {
-                logger.log(Level.SEVERE, e.toString());
+                logger.severe(e.toString());
             }
         }
-
-        public void interpret(String program, JTextArea display) {
-            Thread thread = new Thread(new Runnable() {
-                public void run() {
-                    logger.info("Timeout length: " + timeout);
-                    writer.println(program);
-                    try {
-                        long start = System.currentTimeMillis();
-                        while (!reader.ready()) {
-                            long time = System.currentTimeMillis();
-                            if (time - start > timeout) 
-                                break;
-                        }
+        
+        private void read() {
+            Thread thread = new Thread(() -> {
+                try {
+                    BufferedReader reader = bash.inputReader();
+                    char[] buf = new char[10000];
+                    while (bash.isAlive()) {
                         while (reader.ready()) {
-                            display.append(reader.readLine() + "\n");
+                            int count = reader.read(buf, 0, 10000);
+                            display.append(new String(buf, 0, count));
                         }
-                    } catch (IOException ex) {
-                        logger.log(Level.WARNING, ex.toString());
+                        Thread.sleep(100);
                     }
-                    display.append("& ");
-                    display.setCaretPosition(display.getText().length());
-                }
+                } catch (IOException | InterruptedException ex) {
+                    logger.warning(ex.toString());
+                }                  
             });
             thread.start();
         }
         
-        public void setTimeout(long timeout) {
-            this.timeout = timeout;
-        }
-        
-        public long getTimeout() {
-            return timeout;
+        public void interpret(String code, SeaShellTab display) {  
+            BufferedWriter writer = bash.outputWriter();
+            try {
+                writer.write(code, 0, code.length());
+                writer.flush();
+                Thread.sleep(1000);
+                display.startNewLine();
+            } catch (IOException | InterruptedException ex) {
+                logger.warning(ex.toString());
+            }
         }
     }
 
     public SeaShell() {
         super("SeaShell");
-        interpreter = new Interpreter();
         initLogger();
     }
 
@@ -160,10 +200,10 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
         settings = new JMenu("Settings");
         setTitle = new JMenuItem("Set tab title");
         setTitle.addActionListener(this);
-        setTimeout = new JMenuItem("Set timeout length");
-        setTimeout.addActionListener(this);
+        setStarter = new JMenuItem("Set starting text");
+        setStarter.addActionListener(this);
         settings.add(setTitle);
-        settings.add(setTimeout);
+        settings.add(setStarter);
         menuBar.add(file);
         menuBar.add(colors);
         menuBar.add(settings);
@@ -243,17 +283,14 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     public void keyReleased(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
             JScrollPane scrollPane = (JScrollPane) tabbedPane.getSelectedComponent();
-            JTextArea seaShellTab = (JTextArea) scrollPane.getViewport().getView();
-            int offset = seaShellTab.getCaretPosition();
-            try {
-                int lineNumber = seaShellTab.getLineOfOffset(offset) - 1;
-                int startIndex = seaShellTab.getLineStartOffset(lineNumber);
-                int endIndex = seaShellTab.getLineEndOffset(lineNumber);
-                String text = seaShellTab.getText();
-                String program = text.substring(startIndex + 2, endIndex);
-                interpreter.interpret(program, seaShellTab);
-            } catch (BadLocationException ex) {
-                logger.log(Level.WARNING, ex.toString());
+            SeaShellTab seaShellTab = (SeaShellTab) scrollPane.getViewport().getView();
+            Interpreter interpreter = seaShellTab.getInterpreter();
+            String text = seaShellTab.getText();
+            int p = seaShellTab.getPreviousCaretPosition(), q = seaShellTab.getCaretPosition();
+            if (p < q) {
+                String code = text.substring(p, q);
+                logger.info("Interpreting code: " + code);
+                interpreter.interpret(code, seaShellTab);
             }
         }
     }
@@ -261,8 +298,8 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == newTab) {
             String title = JOptionPane.showInputDialog(this, "Title:", "New tab", JOptionPane.QUESTION_MESSAGE);
-            JTextArea seaShellTab = new JTextArea();
-            seaShellTab.append("& ");
+            SeaShellTab seaShellTab = new SeaShellTab();
+            seaShellTab.startNewLine();
             seaShellTab.addKeyListener(this);
             JScrollPane scrollPane = new JScrollPane(seaShellTab);
             tabbedPane.addTab(title, scrollPane);
@@ -312,21 +349,16 @@ public class SeaShell extends JFrame implements KeyListener, ActionListener {
             int index = tabbedPane.getSelectedIndex();
             if (index >= 0) {
                 String title = JOptionPane.showInputDialog(this, "Set tab title: ", "Set tab title", JOptionPane.QUESTION_MESSAGE);
-                if (title.trim().length() > 0)
+                if (title != null && title.trim().length() > 0)
                     tabbedPane.setTitleAt(index, title);
             }
-        } else if (e.getSource() == setTimeout) {
-            try {
-                String msg = String.format("The current timeout length is %d.\nSet a new timeout length:", interpreter.getTimeout());
-                Long timeout = Long.parseLong(JOptionPane.showInputDialog(this, msg, "Set timeout length", JOptionPane.QUESTION_MESSAGE));
-                if (timeout > 0 && timeout <= 60000) {
-                    interpreter.setTimeout(timeout);
-                    logger.info("Set timeout length to " + timeout);
-                }
-            } catch (NumberFormatException ex) {
-                logger.log(Level.WARNING, ex.toString());
-            }
-        }
+        } else if (e.getSource() == setStarter) {
+            JScrollPane scrollPane = (JScrollPane) tabbedPane.getSelectedComponent();
+            SeaShellTab seaShellTab = (SeaShellTab) scrollPane.getViewport().getView();
+            String s = JOptionPane.showInputDialog(this, "Set starting text: ", "Set starting text", JOptionPane.QUESTION_MESSAGE);
+            if (s != null && s.length() < 10)
+                seaShellTab.setStartingText(s);
+        } 
     }
 
     public static void setLookAndFeel() {
