@@ -31,6 +31,7 @@ public class ShellDemo {
                     if (count > 0) {
                         System.out.print(new String(buf, 0, count));
                     }
+                    Thread.sleep(1);
                     if (process.children().filter(p -> p.isAlive()).count() > 0) 
                         Thread.sleep(500);
                     if (process.children().filter(p -> p.isAlive()).count() == 0) 
