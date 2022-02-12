@@ -2,21 +2,36 @@ import java.io.*;
 
 public class ShellDemo {
 
+    private ProcessBuilder pb;
     private Process process;
     private String prefix = "& ";
 
     public ShellDemo() {}
 
+    private void init() {
+        System.out.println("Shell Demo");
+        System.out.print(prefix);
+        try {
+            pb = new ProcessBuilder("/bin/zsh");
+            process = pb.start();
+            read();
+            listen();
+        } catch (IOException ex) {
+            System.err.println(ex);
+        }
+    }
+
     private void read() {
         Thread thread = new Thread(() -> {
             try (BufferedReader reader = process.inputReader()) {
                 char[] buf = new char[10000];
-                while (reader.ready() || process.isAlive()) {
-                    int count = reader.read(buf, 0, 10000);
-                    if (count > 0)
+                int count = 0;
+                while (process.isAlive()) {
+                    count = reader.read(buf, 0, 10000);
+                    if (count > 0) {
                         System.out.print(new String(buf, 0, count));
+                    }
                 } 
-                System.out.print(prefix); 
             } catch (IOException ex) {
                 System.err.println(ex);
             }
@@ -26,26 +41,20 @@ public class ShellDemo {
 
     public void listen() {
         Thread thread = new Thread(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-                System.out.println("Shell Demo");
-                System.out.print(prefix);
-                while (true) {
+            try (
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                BufferedWriter writer = process.outputWriter();
+            ) {
+                while (process.isAlive()) {
                     String line = reader.readLine();
-                    if (process != null && process.isAlive()) {
-                        BufferedWriter writer = process.outputWriter();
-                        writer.write(line);
-                        writer.newLine();
-                        writer.flush();
-                    }
-                    else {
-                        line = "/bin/zsh -c " + line; 
-                        String[] args = line.split("\\s+", 3);
-                        ProcessBuilder pb = new ProcessBuilder(args);
-                        process = pb.start();
-                        read();
-                    }
+                    writer.write(line);
+                    writer.newLine();
+                    writer.flush();
+                    Thread.sleep(500);
+                    if (process.children().filter(p -> p.isAlive()).count() == 0) 
+                        System.out.print(prefix);
                 }
-            } catch (IOException ex) {
+            } catch (IOException | InterruptedException ex) {
                 System.err.println(ex);
             }
         });
@@ -54,6 +63,6 @@ public class ShellDemo {
 
     public static void main(String[] args) {
         ShellDemo demo = new ShellDemo();
-        demo.listen();
+        demo.init();
     }
 }
