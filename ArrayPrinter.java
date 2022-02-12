@@ -1,14 +1,11 @@
 import java.util.Arrays;
 
-public class PrintArray {
+public class ArrayPrinter {
     
     public static void printArray(Object[] arr) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < arr.length; i++) {
-            if (i == 0) 
-                sb.append(arr[i]);
-            else
-                sb.append(" " + arr[i]);
+            sb.append(i == 0 ? arr[i] : " " + arr[i]);
         }
         System.out.println(sb.toString());
     }
