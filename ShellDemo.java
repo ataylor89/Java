@@ -31,8 +31,12 @@ public class ShellDemo {
                     if (count > 0) {
                         System.out.print(new String(buf, 0, count));
                     }
+                    if (process.children().filter(p -> p.isAlive()).count() > 0) 
+                        Thread.sleep(500);
+                    if (process.children().filter(p -> p.isAlive()).count() == 0) 
+                        System.out.print(prefix);
                 } 
-            } catch (IOException ex) {
+            } catch (IOException | InterruptedException ex) {
                 System.err.println(ex);
             }
         });
@@ -50,11 +54,8 @@ public class ShellDemo {
                     writer.write(line);
                     writer.newLine();
                     writer.flush();
-                    Thread.sleep(500);
-                    if (process.children().filter(p -> p.isAlive()).count() == 0) 
-                        System.out.print(prefix);
                 }
-            } catch (IOException | InterruptedException ex) {
+            } catch (IOException ex) {
                 System.err.println(ex);
             }
         });
